@@ -7,6 +7,7 @@ from typing import Any
 import webview
 
 from .database import Database
+from .agents import MultiAgentOrchestrator
 
 
 class API:
@@ -14,6 +15,7 @@ class API:
         self.db = db
         self.user: dict[str, Any] | None = None
         self.window = None
+        self.orchestrator = MultiAgentOrchestrator()
 
     def _require_user(self) -> int:
         if not self.user:
@@ -53,6 +55,10 @@ class API:
 
     def dashboard(self) -> dict[str, Any]:
         return self.db.dashboard(self._require_user())
+
+    def ai_coach(self) -> dict[str, Any]:
+        """Run the local deterministic agent pipeline on the current learner profile."""
+        return self.orchestrator.run(self.db.dashboard(self._require_user()))
 
     def progress(self) -> list[dict[str, Any]]:
         return self.db.progress(self._require_user())

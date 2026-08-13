@@ -1,8 +1,71 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build / packaging
+build/
+dist/
+*.spec
+*.egg-info/
+
+# Local application state
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+data/
+backups/
+exports/
+
+# AI / ML artifacts
+models/
+*.gguf
+*.onnx
+*.bin
+*.safetensors
+
+# Logs and temp files
+*.log
+*.tmp
+.cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE
 .vscode/
 .idea/
-dist/
-build/
-*.spec
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Coverage / profiling
+.prof
+.profraw
+
+# Frontend tooling caches
+node_modules/
+.npm/
+
+# Editor backups
+*.swp
+*.swo
+*~

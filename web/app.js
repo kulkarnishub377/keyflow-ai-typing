@@ -1,238 +1,38 @@
-const state = {
-  user: null,
-  lessons: [],
-  progress: [],
-  dashboard: null,
-  settings: { theme: 'dark', daily_goal_minutes: 15 },
-  route: 'dashboard',
-  selectedLesson: null,
-  practice: null,
-  authMode: 'login'
-};
-
-const app = document.getElementById('app');
-const $ = (s) => document.querySelector(s);
-const esc = (v='') => String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
-
-async function api(method, ...args) {
-  if (!window.pywebview?.api) throw new Error('Desktop bridge is not ready.');
-  return await window.pywebview.api[method](...args);
-}
-
-function toast(message) {
-  const el = $('#toast'); if (!el) return;
-  el.textContent = message; el.style.display='block';
-  clearTimeout(window.__toast); window.__toast=setTimeout(()=>el.style.display='none',2800);
-}
-
-function applyTheme(){ document.body.classList.toggle('light', state.settings.theme === 'light'); }
-
-function renderAuth() {
-  app.innerHTML = `
-  <main class="auth">
-    <section class="auth-card">
-      <div class="eyebrow">Offline typing intelligence</div>
-      <div class="logo-large">Key<span style="color:var(--accent)">Flow</span> Local</div>
-      <p class="subtitle">Learn touch typing, practice intelligently, and keep your progress on this computer.</p>
-      <div class="auth-actions">
-        <button class="${state.authMode==='login'?'primary':'ghost'}" onclick="setAuthMode('login')">Log in</button>
-        <button class="${state.authMode==='register'?'primary':'ghost'}" onclick="setAuthMode('register')">Create local profile</button>
-      </div>
-      <div id="authError" class="error"></div>
-      ${state.authMode==='login' ? `
-        <form onsubmit="login(event)">
-          <div class="field"><label>Username</label><input id="loginUser" required autocomplete="username"></div>
-          <div class="field"><label>Password</label><input id="loginPass" required type="password" autocomplete="current-password"></div>
-          <button class="primary" style="width:100%">Open my workspace</button>
-        </form>` : `
-        <form onsubmit="register(event)">
-          <div class="field"><label>Display name</label><input id="regName" required></div>
-          <div class="field"><label>Username</label><input id="regUser" required minlength="3"></div>
-          <div class="field"><label>Password</label><input id="regPass" required minlength="6" type="password"></div>
-          <button class="primary" style="width:100%">Create local profile</button>
-        </form>`}
-      <p class="subtitle" style="margin-top:18px;font-size:12px">Your profile is stored locally. There is no cloud login or required server.</p>
-    </section>
-  </main><div id="toast" class="toast"></div>`;
-}
-
-function setAuthMode(mode){ state.authMode=mode; renderAuth(); }
-
-async function login(e){
-  e.preventDefault();
-  try { await api('login',$('#loginUser').value,$('#loginPass').value); await boot(); }
-  catch(err){ $('#authError').textContent=err.message||String(err); }
-}
-
-async function register(e){
-  e.preventDefault();
-  try { await api('register',$('#regUser').value,$('#regPass').value,$('#regName').value); await boot(); }
-  catch(err){ $('#authError').textContent=err.message||String(err); }
-}
-
-async function boot(){
-  const data = await api('get_bootstrap');
-  state.user=data.user;
-  state.lessons=data.lessons||[];
-  state.progress=data.progress||[];
-  state.dashboard=data.dashboard||null;
-  state.settings=data.settings||state.settings;
-  applyTheme();
-  state.route = state.user ? 'dashboard' : 'dashboard';
-  render();
-}
-
-function layout(content){
-  const nav = [['dashboard','Dashboard'],['learn','Learn'],['practice','Practice'],['progress','Progress'],['settings','Settings']];
-  return `<div class="shell">
-    <aside class="sidebar">
-      <div class="brand">Key<span>Flow</span></div>
-      <div class="nav">${nav.map(([id,label])=>`<button class="${state.route===id?'active':''}" onclick="go('${id}')">${label}</button>`).join('')}</div>
-      <div class="side-bottom">
-        <button class="ghost" onclick="toggleTheme()">${state.settings.theme==='dark'?'☼ Light mode':'◐ Dark mode'}</button>
-        <button class="danger" onclick="logout()">Log out</button>
-      </div>
-    </aside>
-    <main class="app-main"><div class="topbar"><div><div class="eyebrow">Local workspace</div><div style="font-size:14px;color:var(--muted)">${esc(state.user?.display_name||'')}</div></div><div class="user-pill">${esc(state.user?.username||'')}</div></div>${content}</main>
-    <div id="toast" class="toast"></div>
-  </div>`;
-}
-
-function render(){
-  if(!state.user){ renderAuth(); return; }
-  applyTheme();
-  if(state.route==='dashboard') renderDashboard();
-  if(state.route==='learn') renderLearn();
-  if(state.route==='practice') renderPractice();
-  if(state.route==='progress') renderProgress();
-  if(state.route==='settings') renderSettings();
-}
-
-function go(route){ state.route=route; state.selectedLesson=null; render(); }
-
-function renderDashboard(){
-  const d=state.dashboard||{sessions:0,best_wpm:0,avg_wpm:0,avg_accuracy:0,total_minutes:0,today_minutes:0,recent:[],weak_keys:[]};
-  const next=state.progress.find(x=>x.completed_count===0)||state.progress[0];
-  const goal=Math.max(1,Number(state.settings.daily_goal_minutes||15));
-  const pct=Math.min(100,d.today_minutes/goal*100);
-  app.innerHTML=layout(`
-    <h1>Good typing is built, not rushed.</h1>
-    <p class="subtitle">Your local coach tracks the patterns behind your speed so practice can become more targeted over time.</p>
-    <div class="grid stats-grid" style="margin:22px 0">
-      ${stat('Best WPM',Math.round(d.best_wpm),'personal best')}
-      ${stat('Average WPM',Math.round(d.avg_wpm),'across saved sessions')}
-      ${stat('Accuracy',`${d.avg_accuracy.toFixed(1)}%`,'average accuracy')}
-      ${stat('Practice',`${d.total_minutes}m`,'total recorded time')}
-    </div>
-    <div class="grid two">
-      <section class="card">
-        <div class="section-title"><div><h2>Today</h2><div class="subtitle">Daily training goal</div></div><strong>${d.today_minutes}/${goal} min</strong></div>
-        <div class="progress" style="width:100%;height:12px"><i style="width:${pct}%"></i></div>
-        <p style="margin:12px 0 0;color:var(--muted);font-size:13px">${pct>=100?'Goal complete. Great work.':`You need ${(goal-d.today_minutes).toFixed(1)} more minutes to reach today's goal.`}</p>
-      </section>
-      <section class="card"><div class="section-title"><div><h2>AI Coach Preview</h2><div class="subtitle">Rule-based local insight in this version</div></div></div>
-        <p>${coachInsight(d)}</p><button class="primary" onclick="go('practice')">Train my weaknesses</button>
-      </section>
-    </div>
-    <div class="grid two" style="margin-top:16px">
-      <section class="card"><div class="section-title"><div><h2>Continue learning</h2><div class="subtitle">${next?esc(next.title):'All lessons complete'}</div></div>${next?`<button class="primary" onclick="startLesson(${next.id})">Start</button>`:''}</div>
-        ${state.progress.slice(0,4).map(lessonRow).join('')}
-      </section>
-      <section class="card"><div class="section-title"><div><h2>Weak keys</h2><div class="subtitle">Most frequent expected-key mistakes</div></div></div>
-        ${d.weak_keys.length?d.weak_keys.map(x=>`<div class="lesson" style="padding:10px 12px"><div><strong>${esc(x.expected_key===' ' ? 'Space' : x.expected_key.toUpperCase())}</strong></div><div style="color:var(--muted)">${x.mistakes} mistakes</div></div>`).join(''):'<div class="empty">Complete a few sessions to see weakness patterns.</div>'}
-      </section>
-    </div>`);
-}
+const state={user:null,lessons:[],progress:[],dashboard:null,settings:{theme:'dark',daily_goal_minutes:15},route:'dashboard',selectedLesson:null,practice:null,coach:null,authMode:'login'};
+const app=document.getElementById('app');
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]));
+async function api(method,...args){if(!window.pywebview?.api)throw Error('Desktop bridge is not ready.');return await window.pywebview.api[method](...args)}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.display='block';clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.style.display='none',2600)}
+function applyTheme(){document.body.classList.toggle('light',state.settings.theme==='light')}
+function initials(name){return (name||'KF').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
+function logo(){return `<img class="brand-mark" src="favicon.svg" alt="KeyFlow Python logo">`}
+async function boot(){try{const b=await api('get_bootstrap');state.user=b.user;state.lessons=b.lessons||[];if(state.user){state.progress=b.progress||[];state.dashboard=b.dashboard;state.settings=b.settings||state.settings;state.route='dashboard';applyTheme();render()}else renderAuth()}catch(e){renderError(e.message||String(e))}}
+function renderError(msg){app.innerHTML=`<main class="auth"><section class="card"><h2>KeyFlow could not start</h2><p class="subtitle">${esc(msg)}</p></section></main>`}
+function renderAuth(){app.innerHTML=`<main class="auth"><section class="auth-wrap"><div class="auth-left"><div class="logo-line">${logo()}<div><b style="font-size:20px">KeyFlow</b><small class="brand-sub">AI Typing</small></div></div><h1>Build typing skill that actually lasts.</h1><p class="subtitle" style="color:#9eb0c8">A local-first typing workspace that teaches fundamentals, measures performance, and prepares for adaptive AI coaching without requiring a cloud account.</p><div class="auth-points"><div class="auth-point"><span class="auth-check">✓</span><span>Private local profiles and offline learning</span></div><div class="auth-point"><span class="auth-check">✓</span><span>Immediate WPM, accuracy, and weakness feedback</span></div><div class="auth-point"><span class="auth-check">✓</span><span>Structured path from beginner fundamentals to advanced fluency</span></div></div></div><div class="auth-right"><div class="auth-tabs"><button class="button ${state.authMode==='login'?'button-primary':'button-ghost'}" onclick="setAuthMode('login')">Log in</button><button class="button ${state.authMode==='register'?'button-primary':'button-ghost'}" onclick="setAuthMode('register')">Create profile</button></div><h2>${state.authMode==='login'?'Welcome back':'Create your local profile'}</h2><p class="subtitle">${state.authMode==='login'?'Your training data stays on this computer.':'No email or cloud account is required.'}</p><form onsubmit="event.preventDefault();submitAuth()"><div class="field"><label>Username</label><input id="authUsername" autocomplete="username" required></div>${state.authMode==='register'?'<div class="field"><label>Display name</label><input id="authDisplay" placeholder="How KeyFlow should greet you"></div>':''}<div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></div><div class="error" id="authError"></div><button class="button button-primary" style="width:100%;margin-top:8px">${state.authMode==='login'?'Enter KeyFlow':'Create local account'}</button></form><p style="font-size:11px;color:var(--muted);margin-top:18px">Passwords are hashed locally. Core practice works without internet.</p></div></section></main>`}
+function setAuthMode(mode){state.authMode=mode;renderAuth()}
+async function submitAuth(){const u=document.getElementById('authUsername')?.value||'',p=document.getElementById('authPassword')?.value||'',d=document.getElementById('authDisplay')?.value||'';const er=document.getElementById('authError');try{state.user=state.authMode==='login'?await api('login',u,p):await api('register',u,p,d);const b=await api('get_bootstrap');state.lessons=b.lessons||[];state.progress=b.progress||[];state.dashboard=b.dashboard;state.settings=b.settings||state.settings;applyTheme();render()}catch(e){if(er)er.textContent=e.message||String(e)}}
+function navButton(route,icon,label){return `<button class="${state.route===route?'active':''}" onclick="go('${route}')"><span class="nav-icon">${icon}</span>${label}</button>`}
+function layout(content,title,subtitle){const d=state.dashboard||{};return `<div class="app-shell"><aside class="sidebar"><div class="brand">${logo()}<div><div class="brand-text">Key<span>Flow</span></div><span class="brand-sub">AI Typing</span></div></div><nav class="nav">${navButton('dashboard','⌂','Dashboard')}${navButton('learn','◎','Learning')}${navButton('practice','⌨','Practice')}${navButton('progress','◫','Analytics')}${navButton('coach','✦','AI Coach')}${navButton('settings','⚙','Settings')}</nav><div class="sidebar-spacer"></div><div class="local-status"><div class="status-row"><span>Local mode</span><span class="status-dot"></span></div><div style="color:var(--muted);font-size:10px;margin-top:7px">Data stays on this computer</div></div><button class="button button-ghost" onclick="logout()">Sign out</button></aside><main class="main"><header class="topbar"><div class="title-block"><div class="eyebrow">${esc(title||'KeyFlow Workspace')}</div><h1>${esc(title||'Your typing workspace')}</h1><div class="subtitle">${esc(subtitle||'Train with intent. Measure what matters. Improve one skill at a time.')}</div></div><div class="top-actions"><button class="button button-ghost button-small" onclick="toggleTheme()">${state.settings.theme==='dark'?'☀ Light':'☾ Dark'}</button><div class="user-chip"><div class="avatar">${esc(initials(state.user?.display_name))}</div><div><b style="font-size:12px">${esc(state.user?.display_name||'User')}</b><small>Local profile</small></div></div></div></header>${content}</main></div>`}
 function stat(label,value,hint){return `<div class="card stat"><div class="label">${label}</div><div class="value">${value}</div><div class="hint">${hint}</div></div>`}
-function coachInsight(d){
-  if(!d.sessions) return 'Complete your first short lesson. The app will start building a local profile of your speed, accuracy and error patterns.';
-  if(d.avg_accuracy<92) return `Accuracy is the first priority right now (${d.avg_accuracy.toFixed(1)}%). Slow the pace slightly, stay relaxed, and let speed come after clean repetitions.`;
-  if(d.weak_keys?.length) return `Your highest-frequency weakness is the ${d.weak_keys[0].expected_key.toUpperCase()} key. The next practice session can target that key repeatedly before returning to full words.`;
-  return `You're building a strong base at ${Math.round(d.avg_wpm)} WPM. Keep accuracy high while gradually increasing pace.`;
-}
-function lessonRow(l){
-  const pct=l.completed_count?100:0;
-  return `<div class="lesson"><div class="lesson-left"><div class="badge">${l.level}</div><div><div class="lesson-title">${esc(l.title)}</div><div class="lesson-desc">${esc(l.description)}</div><div class="progress"><i style="width:${pct}%"></i></div></div></div><button class="ghost" onclick="startLesson(${l.id})">${l.completed_count?'Practice':'Learn'}</button></div>`;
-}
-
-function renderLearn(){
-  app.innerHTML=layout(`<h1>Learning path</h1><p class="subtitle">A structured route from home-row fundamentals to real-world typing control.</p><div class="lesson-list" style="margin-top:20px">${state.progress.map(lessonRow).join('')}</div>`);
-}
-
-function startLesson(id){ state.selectedLesson=state.progress.find(x=>x.id===id)||state.lessons.find(x=>x.id===id); state.route='practice'; renderPractice(); }
-function renderPractice(){
-  const l=state.selectedLesson || state.lessons[0];
-  if(!l){ app.innerHTML=layout('<div class="empty">No lessons found.</div>'); return; }
-  if(!state.practice || state.practice.lessonId!==l.id) state.practice={lessonId:l.id,prompt:l.content,started:null,finished:false};
-  app.innerHTML=layout(`<div class="practice-shell"><div class="eyebrow">Lesson ${l.level}</div><h1>${esc(l.title)}</h1><p class="subtitle">${esc(l.description)} Focus: ${esc(l.focus_keys||'full keyboard')}</p>
-    <div class="practice-stats">${pstat('WPM','wpm')} ${pstat('Accuracy','accuracy')} ${pstat('Errors','errors')} ${pstat('Time','time')}</div>
-    <div id="prompt" class="prompt"></div>
-    <textarea id="typingInput" autofocus spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Start typing here..."></textarea>
-    <div class="kbd">${'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').map(k=>`<span class="key">${k}</span>`).join('')}</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px"><span class="subtitle">Target: accuracy first, speed second.</span><div><button class="ghost" onclick="resetPractice()">Reset</button> <button class="primary" onclick="finishPractice(true)">Finish & save</button></div></div>
-  </div>`);
-  setupTyping();
-}
-function pstat(label,id){return `<div class="practice-stat"><span style="color:var(--muted);font-size:12px">${label}</span><strong id="live-${id}">0</strong></div>`}
-function setupTyping(){
-  const input=$('#typingInput'), prompt=$('#prompt'), text=state.practice.prompt;
-  const renderPrompt=(typed='')=>{ prompt.innerHTML=[...text].map((ch,i)=>`<span class="${i<typed.length?(typed[i]===ch?'done':'current'):i===typed.length?'current':'pending'}">${ch===' '?'·':esc(ch)}</span>`).join(''); };
-  renderPrompt(''); input.addEventListener('keydown', e=>{ if(e.key==='Backspace') state.practice.backspaces=(state.practice.backspaces||0)+1; });
-  input.addEventListener('input', ()=>{
-    const typed=input.value; if(!state.practice.started) state.practice.started=performance.now(); renderPrompt(typed);
-    let correct=0, errors=0; const counts={};
-    for(let i=0;i<typed.length;i++){ if(typed[i]===text[i]) correct++; else { errors++; const expected=text[i]||''; if(expected) counts[expected]=(counts[expected]||0)+1; } }
-    const elapsed=Math.max(.25,(performance.now()-state.practice.started)/1000); const minutes=elapsed/60;
-    const wpm=(correct/5)/minutes; const acc=typed.length?correct/typed.length*100:100;
-    $('#live-wpm').textContent=isFinite(wpm)?Math.round(wpm):0; $('#live-accuracy').textContent=acc.toFixed(1)+'%'; $('#live-errors').textContent=errors; $('#live-time').textContent=elapsed.toFixed(1)+'s';
-    if(typed.length>=text.length){ finishPractice(false, {duration_seconds:elapsed,total_chars:typed.length,correct_chars:correct,incorrect_chars:errors,wpm,accuracy:acc,errors:Object.entries(counts).map(([expected,count])=>({expected,actual:'?',count}))}); }
-  });
-  setTimeout(()=>input.focus(),100);
-}
-async function finishPractice(manual=true,metrics=null){
-  if(state.practice.finished) return;
-  const input=$('#typingInput');
-  if(!input) return;
-  const text=state.practice.prompt, typed=input.value; let correct=0, incorrect=0; const counts={};
-  for(let i=0;i<typed.length;i++){ if(typed[i]===text[i]) correct++; else {incorrect++; const expected=text[i]||''; if(expected) counts[expected]=(counts[expected]||0)+1;} }
-  const elapsed=metrics?.duration_seconds || (state.practice.started?Math.max(.25,(performance.now()-state.practice.started)/1000):0);
-  if(!elapsed && !typed.length) { toast('Type a few characters before saving.'); return; }
-  const wpm=metrics?.wpm || ((correct/5)/(elapsed/60)); const accuracy=metrics?.accuracy ?? (typed.length?correct/typed.length*100:100);
-  state.practice.finished=true;
-  try{
-    const result=await api('save_session',{lesson_id:state.practice.lessonId,duration_seconds:elapsed,total_chars:typed.length,correct_chars:correct,incorrect_chars:incorrect,backspaces:state.practice.backspaces||0,wpm,accuracy,text_prompt:text,errors:Object.entries(counts).map(([expected,count])=>({expected,actual:'?',count}))});
-    state.dashboard=result.dashboard; state.progress=await api('progress');
-    toast(`Saved: ${Math.round(wpm)} WPM · ${accuracy.toFixed(1)}% accuracy`);
-    if(manual) setTimeout(()=>go('dashboard'),500);
-  } catch(err){ state.practice.finished=false; toast(err.message||String(err)); }
-}
-function resetPractice(){ state.practice=null; renderPractice(); }
-
-function renderProgress(){
-  const d=state.dashboard||{recent:[]}; const recent=[...(d.recent||[])].reverse(); const max=Math.max(1,...recent.map(x=>x.wpm));
-  app.innerHTML=layout(`<h1>Your progress</h1><p class="subtitle">Everything here is calculated from your local session history.</p>
-    <div class="grid two" style="margin-top:20px">
-      <section class="card"><div class="section-title"><div><h2>WPM trend</h2><div class="subtitle">Most recent saved sessions</div></div></div><div class="chart">${recent.map(x=>`<div class="bar" style="height:${Math.max(6,x.wpm/max*150)}px"><span>${Math.round(x.wpm)}</span></div>`).join('')||'<div class="empty">Not enough sessions yet.</div>'}</div></section>
-      <section class="card"><div class="section-title"><div><h2>Learning mastery</h2><div class="subtitle">Lesson bests and completion</div></div></div>${state.progress.map(l=>`<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;font-size:13px"><span>${esc(l.title)}</span><strong>${l.completed_count?Math.round(l.best_wpm)+' WPM':'Not started'}</strong></div><div class="progress" style="width:100%"><i style="width:${l.completed_count?100:0}%"></i></div></div>`).join('')}</section>
-    </div>
-    <section class="card" style="margin-top:16px"><div class="section-title"><div><h2>Session history</h2><div class="subtitle">Stored locally on this computer</div></div></div><table class="table"><thead><tr><th>Date</th><th>WPM</th><th>Accuracy</th><th>Duration</th></tr></thead><tbody>${recent.slice().reverse().map(x=>`<tr><td>${esc(x.created_at)}</td><td>${Math.round(x.wpm)}</td><td>${Number(x.accuracy).toFixed(1)}%</td><td>${Number(x.duration_seconds).toFixed(1)}s</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No sessions yet.</td></tr>'}</tbody></table></section>`);
-}
-
-function renderSettings(){
-  app.innerHTML=layout(`<h1>Settings</h1><p class="subtitle">Keep the workspace comfortable and keep your data under your control.</p>
-    <section class="card" style="max-width:760px;margin-top:20px">
-      <div class="field"><label>Theme</label><select id="theme" style="padding:12px;border-radius:12px;background:var(--panel-2);color:var(--text);border:1px solid var(--line)"><option value="dark" ${state.settings.theme==='dark'?'selected':''}>Dark</option><option value="light" ${state.settings.theme==='light'?'selected':''}>Light</option></select></div>
-      <div class="field"><label>Daily practice goal (minutes)</label><input id="goal" type="number" min="1" max="240" value="${state.settings.daily_goal_minutes}"></div>
-      <button class="primary" onclick="saveSettings()">Save settings</button>
-      <hr style="border:0;border-top:1px solid var(--line);margin:28px 0">
-      <h3>Local backup</h3><p class="subtitle">Export a JSON backup that stays on your device unless you choose to move it elsewhere.</p>
-      <button class="ghost" onclick="backup()">Export backup</button>
-    </section>`);
-}
-async function saveSettings(){ state.settings=await api('update_settings',{theme:$('#theme').value,daily_goal_minutes:Number($('#goal').value)}); applyTheme(); render(); toast('Settings saved.'); }
-async function backup(){ try{ const pick=await api('choose_backup_path'); if(!pick.path)return; const out=await api('export_backup',pick.path); toast('Backup exported.'); }catch(err){toast(err.message||String(err));} }
-async function toggleTheme(){ state.settings.theme=state.settings.theme==='dark'?'light':'dark'; state.settings=await api('update_settings',state.settings); applyTheme(); render(); }
-async function logout(){ await api('logout'); state.user=null; state.dashboard=null; state.progress=[]; renderAuth(); }
-
-window.addEventListener('pywebviewready', boot);
-setTimeout(()=>{ if(window.pywebview?.api) boot(); },500);
+function coachCard(){const c=state.coach;const msg=c?.summary||'Run the local coaching pipeline to get a performance-based recommendation.';const evidence=(c?.trace||[]).slice(0,4).map(x=>x.agent.replaceAll('_',' '));return `<section class="card"><div class="section-head"><div><h2>Local AI coaching</h2><p>Deterministic multi-agent analysis • no cloud required</p></div><button class="button button-primary button-small" onclick="runCoach()">Analyze now</button></div><div class="coach"><div class="coach-icon">✦</div><div class="coach-copy"><h3>Next best action</h3><p>${esc(msg)}</p><div class="evidence">${evidence.length?evidence.map(x=>`<span class="pill">${esc(x)}</span>`).join(''):'<span class="pill">Awaiting analysis</span>'}</div></div></div></section>`}
+function render(){applyTheme();if(!state.user){renderAuth();return}if(state.route==='dashboard')renderDashboard();else if(state.route==='learn')renderLearn();else if(state.route==='practice')renderPractice();else if(state.route==='progress')renderProgress();else if(state.route==='coach')renderCoach();else renderSettings()}
+function renderDashboard(){const d=state.dashboard||{};const goal=Number(state.settings.daily_goal_minutes)||15;const today=Number(d.today_minutes)||0;const goalPct=Math.min(100,today/goal*100);app.innerHTML=layout(`<div class="grid stats">${stat('Best WPM',Math.round(d.best_wpm||0),'Personal record')}${stat('Average WPM',Math.round(d.avg_wpm||0),'Across saved sessions')}${stat('Accuracy',`${Number(d.avg_accuracy||0).toFixed(1)}%`,'Average correctness')}${stat('Practice time',`${Number(d.total_minutes||0).toFixed(1)}m`,'Total on this profile')}</div><div class="grid split" style="margin-top:16px"><div class="grid"><section class="card hero"><div class="section-head"><div><h2>Today's training</h2><p>${today.toFixed(1)} of ${goal} minutes completed</p></div><button class="button button-primary" onclick="go('practice')">Start practice</button></div><div class="goal-line"><span>Daily goal</span><b>${Math.round(goalPct)}%</b></div><div class="progress"><i style="width:${goalPct}%"></i></div></section>${coachCard()}</div><section class="card"><div class="section-head"><div><h2>Weakest keys</h2><p>Most frequent expected-key errors</p></div></div>${d.weak_keys?.length?d.weak_keys.slice(0,6).map(x=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)"><span style="font-weight:850">${esc(x.expected_key.toUpperCase())}</span><span style="color:var(--muted);font-size:12px">${x.mistakes} mistakes</span></div>`).join(''):'<div class="empty">Complete a few sessions to build local weakness data.</div>'}</section></div><div class="grid split" style="margin-top:16px"><section class="card"><div class="section-head"><div><h2>Recent performance</h2><p>Saved locally on this computer</p></div><button class="button button-ghost button-small" onclick="go('progress')">View analytics</button></div>${recentChart(d.recent||[])}</section><section class="card"><div class="section-head"><div><h2>Next lesson</h2><p>Continue your structured path</p></div></div>${nextLesson()}</section></div>`,`Dashboard`,`A focused overview of your local learning progress.`)}
+function recentChart(recent){const arr=[...(recent||[])].reverse();if(!arr.length)return '<div class="empty">Your first saved session will appear here.</div>';const max=Math.max(1,...arr.map(x=>Number(x.wpm)||0));return `<div class="chart">${arr.map((x,i)=>`<div class="bar" style="height:${Math.max(8,(Number(x.wpm)||0)/max*170)}px"><span>${Math.round(x.wpm)}</span><em>${i+1}</em></div>`).join('')}</div>`}
+function nextLesson(){const l=state.progress.find(x=>!x.completed_count)||state.progress[0];if(!l)return '<div class="empty">No lessons are available.</div>';return `<div style="padding-top:4px"><div class="eyebrow">Lesson ${l.level}</div><h3 style="margin:9px 0 6px;font-size:19px">${esc(l.title)}</h3><p class="subtitle">${esc(l.description)}</p><div class="lesson-meta"><span class="mini">Focus: ${esc(l.focus_keys||'foundations')}</span><span class="mini">${l.duration_minutes} min</span></div><button class="button button-primary" style="margin-top:18px" onclick="startLesson(${l.id})">Continue lesson</button></div>`}
+function renderLearn(){app.innerHTML=layout(`<section class="card hero"><div class="eyebrow">Structured curriculum</div><h2 style="font-size:24px;margin:8px 0">From keyboard fundamentals to fluency</h2><p class="subtitle">Each lesson is a building block. Later adaptive agents can use your measured weaknesses to select the next best drill automatically.</p></section><div class="lesson-list" style="margin-top:16px">${state.progress.map(l=>`<div class="lesson"><div class="lesson-num">${l.level}</div><div><div class="lesson-title">${esc(l.title)}</div><div class="lesson-desc">${esc(l.description)}</div><div class="lesson-meta"><span class="mini">${esc(l.focus_keys||'general')}</span><span class="mini">${l.duration_minutes} min</span>${l.completed_count?`<span class="mini">Best ${Math.round(l.best_wpm)} WPM</span>`:'<span class="mini">Not started</span>'}</div></div><button class="button button-ghost button-small" onclick="startLesson(${l.id})">${l.completed_count?'Practice':'Learn'}</button></div>`).join('')}</div>`,`Learning`,`A deliberate path that teaches the keyboard before chasing speed.`)}
+function startLesson(id){state.selectedLesson=state.progress.find(x=>x.id===id)||state.lessons.find(x=>x.id===id);state.route='practice';state.practice=null;render()}
+function renderPractice(){const l=state.selectedLesson||state.progress[0]||state.lessons[0];if(!l){app.innerHTML=layout('<div class="empty">No lesson content is available.</div>','Practice');return}if(!state.practice||state.practice.lessonId!==l.id)state.practice={lessonId:l.id,prompt:l.content,started:null,finished:false,backspaces:0};const p=state.practice;app.innerHTML=layout(`<div class="practice"><div class="practice-header"><div class="practice-title"><div class="eyebrow">Lesson ${l.level} • ${esc(l.focus_keys||'typing')}</div><h1>${esc(l.title)}</h1><div class="subtitle">${esc(l.description)}</div></div><div><button class="button button-ghost button-small" onclick="resetPractice()">Reset</button></div></div><div class="practice-metrics"><div class="practice-metric"><span>WPM</span><strong id="live-wpm">0</strong></div><div class="practice-metric"><span>Accuracy</span><strong id="live-accuracy">100%</strong></div><div class="practice-metric"><span>Errors</span><strong id="live-errors">0</strong></div><div class="practice-metric"><span>Time</span><strong id="live-time">0.0s</strong></div></div><div id="prompt" class="prompt"></div><textarea id="typingInput" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Start typing the passage here..."></textarea><section class="card keyboard-card"><div class="section-head"><div><h2>Keyboard map</h2><p>Visual reference for the current exercise</p></div></div><div class="keyboard-row">${'QWERTYUIOP'.split('').map(k=>`<span class="keycap" data-key="${k.toLowerCase()}">${k}</span>`).join('')}</div><div class="keyboard-row">${'ASDFGHJKL'.split('').map(k=>`<span class="keycap" data-key="${k.toLowerCase()}">${k}</span>`).join('')}</div><div class="keyboard-row">${'ZXCVBNM'.split('').map(k=>`<span class="keycap" data-key="${k.toLowerCase()}">${k}</span>`).join('')}</div><div class="keyboard-row"><span class="keycap wide">SHIFT</span><span class="keycap space">SPACE</span><span class="keycap wide">ENTER</span></div></section><div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="subtitle">Accuracy first. Speed follows clean repetitions.</span><button class="button button-primary" onclick="finishPractice(true)">Finish & save</button></div></div>`,`Practice`,`Focused typing practice with immediate local performance feedback.`);setupTyping()}
+function setupTyping(){const input=document.getElementById('typingInput'),prompt=document.getElementById('prompt'),text=state.practice.prompt;const paint=typed=>{prompt.innerHTML=[...text].map((ch,i)=>{const status=i<typed.length?(typed[i]===ch?'done':'bad'):i===typed.length?'current':'pending';return `<span class="${status}">${ch===' '?'·':esc(ch)}</span>`}).join('')};paint('');input.onkeydown=e=>{if(e.key==='Backspace')state.practice.backspaces++};input.oninput=()=>{const typed=input.value;if(!state.practice.started)state.practice.started=performance.now();paint(typed);let correct=0,errors=0;const counts={};for(let i=0;i<typed.length;i++){if(typed[i]===text[i])correct++;else{errors++;const expected=text[i]||'';if(expected)counts[expected]=(counts[expected]||0)+1}}const elapsed=Math.max(.25,(performance.now()-state.practice.started)/1000),wpm=(correct/5)/(elapsed/60),acc=typed.length?correct/typed.length*100:100;document.getElementById('live-wpm').textContent=isFinite(wpm)?Math.round(wpm):0;document.getElementById('live-accuracy').textContent=acc.toFixed(1)+'%';document.getElementById('live-errors').textContent=errors;document.getElementById('live-time').textContent=elapsed.toFixed(1)+'s';if(typed.length>=text.length)finishPractice(false,{duration_seconds:elapsed,total_chars:typed.length,correct_chars:correct,incorrect_chars:errors,wpm,accuracy:acc,errors:Object.entries(counts).map(([expected,count])=>({expected,actual:'?',count}))})};setTimeout(()=>input.focus(),80)}
+async function finishPractice(manual=true,metrics=null){if(state.practice.finished)return;const input=document.getElementById('typingInput');if(!input)return;const text=state.practice.prompt,typed=input.value;let correct=0,incorrect=0;const counts={};for(let i=0;i<typed.length;i++){if(typed[i]===text[i])correct++;else{incorrect++;const expected=text[i]||'';if(expected)counts[expected]=(counts[expected]||0)+1}}const elapsed=metrics?.duration_seconds||(state.practice.started?Math.max(.25,(performance.now()-state.practice.started)/1000):0);if(!elapsed&&!typed.length){toast('Type a few characters before saving.');return}const wpm=metrics?.wpm||((correct/5)/(elapsed/60));const accuracy=metrics?.accuracy??(typed.length?correct/typed.length*100:100);state.practice.finished=true;try{const result=await api('save_session',{lesson_id:state.practice.lessonId,duration_seconds:elapsed,total_chars:typed.length,correct_chars:correct,incorrect_chars:incorrect,backspaces:state.practice.backspaces,wpm,accuracy,text_prompt:text,errors:Object.entries(counts).map(([expected,count])=>({expected,actual:'?',count}))});state.dashboard=result.dashboard;state.progress=await api('progress');toast(`Saved ${Math.round(wpm)} WPM • ${accuracy.toFixed(1)}% accuracy`);if(manual)setTimeout(()=>go('dashboard'),450)}catch(e){state.practice.finished=false;toast(e.message||String(e))}}
+function resetPractice(){state.practice=null;renderPractice()}
+function renderProgress(){const d=state.dashboard||{},recent=[...(d.recent||[])].reverse();const max=Math.max(1,...recent.map(x=>Number(x.wpm)||0));app.innerHTML=layout(`<div class="grid split"><section class="card"><div class="section-head"><div><h2>WPM trajectory</h2><p>Most recent saved sessions</p></div></div>${recent.length?`<div class="chart">${recent.map((x,i)=>`<div class="bar" style="height:${Math.max(8,(Number(x.wpm)||0)/max*175)}px"><span>${Math.round(x.wpm)}</span><em>${i+1}</em></div>`).join('')}</div>`:'<div class="empty">Complete practice sessions to build a trend.</div>'}</section><section class="card"><div class="section-head"><div><h2>Learning mastery</h2><p>Best saved performance by lesson</p></div></div>${state.progress.map(l=>`<div style="margin:13px 0"><div style="display:flex;justify-content:space-between;font-size:12px"><span>${esc(l.title)}</span><b>${l.completed_count?Math.round(l.best_wpm)+' WPM':'Not started'}</b></div><div class="progress" style="margin-top:7px"><i style="width:${l.completed_count?100:0}%"></i></div></div>`).join('')}</section></div><section class="card" style="margin-top:16px"><div class="section-head"><div><h2>Weak-key heat map</h2><p>Current aggregated expected-key errors</p></div></div><div class="keys">${'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').map(k=>`<span class="key ${(d.weak_keys||[]).some(x=>String(x.expected_key).toUpperCase()===k)?'weak':''}">${k}</span>`).join('')}</div></section><section class="card" style="margin-top:16px"><div class="section-head"><div><h2>Session history</h2><p>All data stays local</p></div></div><table class="table"><thead><tr><th>Date</th><th>WPM</th><th>Accuracy</th><th>Duration</th></tr></thead><tbody>${recent.slice().reverse().map(x=>`<tr><td>${esc(x.created_at)}</td><td>${Math.round(x.wpm)}</td><td>${Number(x.accuracy).toFixed(1)}%</td><td>${Number(x.duration_seconds).toFixed(1)}s</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No sessions yet.</td></tr>'}</tbody></table></section>`,`Analytics`,`Deep local metrics today; richer key, finger, transition, and rhythm analytics are part of the advanced engine roadmap.`)}
+async function runCoach(){try{state.coach=await api('ai_coach');render();toast('Local agent pipeline completed.')}catch(e){toast(e.message||String(e))}}
+function renderCoach(){const c=state.coach;app.innerHTML=layout(`<div class="grid split"><section class="card hero"><div class="eyebrow">Agentic learning system</div><h2 style="font-size:26px;margin:8px 0">Your local typing coach</h2><p class="subtitle">The current pipeline uses deterministic agents with explicit roles, rules, confidence, and validation. It is designed so a local model can be added later without replacing the typing engine.</p><button class="button button-primary" style="margin-top:14px" onclick="runCoach()">${c?'Run analysis again':'Analyze my performance'}</button></section><section class="card"><div class="section-head"><div><h2>Active agent chain</h2><p>Structured, auditable roles</p></div></div>${['Performance Analyst','Weakness Detector','Curriculum Planner','Coach','Quality Validator'].map((x,i)=>`<div style="display:flex;gap:11px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)"><div class="avatar" style="width:30px;height:30px;font-size:10px">${i+1}</div><div style="font-size:12px;font-weight:800">${x}</div><span style="margin-left:auto;color:var(--success);font-size:10px">LOCAL</span></div>`).join('')}</section></div>${c?`<section class="card" style="margin-top:16px"><div class="section-head"><div><h2>Recommendation</h2><p>Evidence-backed next step</p></div></div><div class="coach"><div class="coach-icon">✦</div><div class="coach-copy"><h3>${esc(c.plan?.mode?.replaceAll('_',' ')||'Practice')}</h3><p>${esc(c.summary)}</p><div class="evidence">${(c.weaknesses?.weak_keys||[]).map(k=>`<span class="pill">Focus ${esc(k)}</span>`).join('')}<span class="pill">${c.plan?.minutes||5} minutes</span><span class="pill">Confidence ${Math.round((c.trace?.slice(-1)[0]?.confidence||0)*100)}%</span></div></div></div></section><section class="card" style="margin-top:16px"><div class="section-head"><div><h2>Agent trace</h2><p>No hidden reasoning is stored; this is the structured execution trace.</p></div></div><table class="table"><thead><tr><th>Agent</th><th>Status</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody>${c.trace.map(r=>`<tr><td>${esc(r.agent.replaceAll('_',' '))}</td><td>${esc(r.status)}</td><td>${Math.round(r.confidence*100)}%</td><td>${esc((r.evidence||[]).join(' • '))}</td></tr>`).join('')}</tbody></table></section>`:'<section class="card" style="margin-top:16px"><div class="empty">Run the local coach to create your first structured analysis.</div></section>'}`,`AI Coach`,`Private-by-default agentic coaching with deterministic measurements at the center.`)}
+function renderSettings(){app.innerHTML=layout(`<section class="card" style="max-width:800px"><div class="section-head"><div><h2>Workspace settings</h2><p>Comfort, practice targets, and local data controls.</p></div></div><div class="form-grid"><div class="field"><label>Theme</label><select id="theme"><option value="dark" ${state.settings.theme==='dark'?'selected':''}>Dark</option><option value="light" ${state.settings.theme==='light'?'selected':''}>Light</option></select></div><div class="field"><label>Daily practice goal (minutes)</label><input id="goal" type="number" min="1" max="240" value="${state.settings.daily_goal_minutes}"></div></div><button class="button button-primary" onclick="saveSettings()">Save settings</button></section><section class="card" style="max-width:800px;margin-top:16px"><div class="section-head"><div><h2>Local backup</h2><p>Export a portable JSON copy. KeyFlow never uploads it automatically.</p></div></div><button class="button button-ghost" onclick="backup()">Export profile backup</button></section><section class="card" style="max-width:800px;margin-top:16px"><div class="section-head"><div><h2>About this build</h2><p>HTML/CSS/JavaScript + Python + pywebview + SQLite.</p></div></div><div class="evidence"><span class="pill">Offline-first</span><span class="pill">Local profiles</span><span class="pill">Deterministic metrics</span><span class="pill">Multi-agent foundation</span></div></section>`,`Settings`,`Keep the workspace comfortable while keeping control of your local data.`)}
+async function saveSettings(){state.settings=await api('update_settings',{theme:document.getElementById('theme').value,daily_goal_minutes:Number(document.getElementById('goal').value)});applyTheme();render();toast('Settings saved.')}
+async function backup(){try{const pick=await api('choose_backup_path');if(!pick.path)return;await api('export_backup',pick.path);toast('Backup exported locally.')}catch(e){toast(e.message||String(e))}}
+async function toggleTheme(){state.settings=await api('update_settings',{...state.settings,theme:state.settings.theme==='dark'?'light':'dark'});applyTheme();render()}
+async function logout(){await api('logout');state.user=null;state.dashboard=null;state.progress=[];state.coach=null;renderAuth()}
+function go(route){state.route=route;render()}
+window.go=go;window.setAuthMode=setAuthMode;window.submitAuth=submitAuth;window.startLesson=startLesson;window.finishPractice=finishPractice;window.resetPractice=resetPractice;window.runCoach=runCoach;window.saveSettings=saveSettings;window.backup=backup;window.toggleTheme=toggleTheme;window.logout=logout;
+window.addEventListener('pywebviewready',boot);setTimeout(()=>{if(window.pywebview?.api)boot()},500);

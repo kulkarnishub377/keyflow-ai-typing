@@ -17,14 +17,15 @@ def main() -> None:
     api = API(db)
     html = (ROOT / "web" / "index.html").as_uri()
     window = webview.create_window(
-        "KeyFlow Local",
+        "KeyFlow AI Typing",
         url=html,
         js_api=api,
         width=1440,
         height=920,
         min_size=(1100, 720),
         resizable=True,
-        background_color="#0b1020",
+        background_color="#070b14",
+        icon=str(ROOT / "web" / "favicon.png"),
         confirm_close=True,
     )
     api.window = window

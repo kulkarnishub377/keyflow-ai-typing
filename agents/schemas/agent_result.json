@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KeyFlow Agent Result",
+  "type": "object",
+  "required": ["agent", "status", "confidence", "output", "evidence"],
+  "properties": {
+    "agent": {"type": "string"},
+    "status": {"enum": ["ok", "blocked", "error"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "output": {"type": "object"},
+    "evidence": {"type": "array", "items": {"type": "string"}}
+  }
+}
