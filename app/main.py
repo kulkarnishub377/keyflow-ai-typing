@@ -25,10 +25,9 @@ def main() -> None:
         min_size=(1100, 720),
         resizable=True,
         background_color="#070b14",
-        icon=str(ROOT / "web" / "favicon.png"),
         confirm_close=True,
     )
-    api.window = window
+    api._window = window
     webview.start(debug=False)
 
 

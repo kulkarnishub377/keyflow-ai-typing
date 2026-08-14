@@ -14,7 +14,7 @@ class API:
     def __init__(self, db: Database):
         self.db = db
         self.user: dict[str, Any] | None = None
-        self.window = None
+        self._window = None
         self.orchestrator = MultiAgentOrchestrator()
 
     def _require_user(self) -> int:
@@ -77,7 +77,9 @@ class API:
     def export_backup(self, path: str) -> dict[str, Any]:
         data = self.db.backup(self._require_user())
         out = Path(path).expanduser()
-        out.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        from .backup import SecureBackupEngine
+        engine = SecureBackupEngine()
+        engine.encrypt_backup(data, out)
         return {"path": str(out)}
 
     def choose_backup_path(self) -> dict[str, Any]:

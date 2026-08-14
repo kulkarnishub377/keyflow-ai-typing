@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .llm import LocalModelProvider
+
 
 @dataclass(frozen=True)
 class AgentResult:
@@ -32,22 +34,26 @@ class PerformanceAnalyst(Agent):
         acc = float(d.get("avg_accuracy", 0))
         telemetry = d.get("latest_telemetry", [])
         avg_latency = 0.0
+        rhythm_variance = 0.0
         if telemetry:
             latencies = [x["latency"] for x in telemetry if x.get("latency", 0) > 0]
             if latencies:
                 avg_latency = sum(latencies) / len(latencies)
+                rhythm_variance = sum((x - avg_latency) ** 2 for x in latencies) / len(latencies)
         if sessions == 0:
             state = "new_learner"
         elif acc < 92:
             state = "accuracy_first"
+        elif rhythm_variance > 25000:
+            state = "erratic_rhythm"
         elif avg_latency > 300:
             state = "mechanical_latency"
         elif avg_wpm < 40:
             state = "fluency_building"
         else:
             state = "speed_and_consistency"
-        return AgentResult(self.name, "ok", 0.96, {"state": state, "sessions": sessions, "avg_wpm": avg_wpm, "avg_accuracy": acc, "avg_latency": avg_latency}, [
-            f"sessions={sessions}", f"avg_latency={avg_latency:.1f}ms", f"avg_accuracy={acc:.1f}%"
+        return AgentResult(self.name, "ok", 0.96, {"state": state, "sessions": sessions, "avg_wpm": avg_wpm, "avg_accuracy": acc, "avg_latency": avg_latency, "rhythm_variance": rhythm_variance}, [
+            f"sessions={sessions}", f"avg_latency={avg_latency:.1f}ms", f"variance={rhythm_variance:.0f}"
         ])
 
 
@@ -111,6 +117,33 @@ class CurriculumPlanner(Agent):
         ])
 
 
+class DifficultyController(Agent):
+    name = "difficulty_controller"
+    required_inputs = ("performance", "plan")
+
+    def run(self, context: dict[str, Any]) -> AgentResult:
+        p = context["performance"]
+        acc = p.get("avg_accuracy", 0)
+        sessions = p.get("sessions", 0)
+        if acc < 90:
+            action = "reduce_speed_gate"
+            target = 96
+        elif 90 <= acc <= 96:
+            action = "maintain_and_stabilize"
+            target = 97
+        elif acc >= 97 and sessions > 3:
+            action = "increase_speed_gate"
+            target = 96
+        else:
+            action = "baseline"
+            target = 95
+        context["plan"]["target_accuracy"] = target
+        context["plan"]["difficulty_action"] = action
+        return AgentResult(self.name, "ok", 0.95, {"action": action, "target_acc": target}, [
+            f"acc={acc:.1f}%", f"action={action}"
+        ])
+
+
 class Coach(Agent):
     name = "coach"
     required_inputs = ("performance", "weaknesses", "plan")
@@ -119,7 +152,9 @@ class Coach(Agent):
         p = context["performance"]
         w = context["weaknesses"]
         plan = context["plan"]
-        if p.get("state") == "mechanical_latency" and w.get("slow_digraphs"):
+        if p.get("state") == "erratic_rhythm":
+            message = "Your typing rhythm is highly erratic. Stop rushing easy words. Focus on a steady, metronomic pace to build true fluency."
+        elif p.get("state") == "mechanical_latency" and w.get("slow_digraphs"):
             message = f"Your fingers are hesitating on certain transitions. Focus on rolling smoothly through {', '.join(w['slow_digraphs'])}."
         elif p["state"] == "new_learner":
             message = "Start with clean home-row habits. Keep the hands relaxed and let accuracy lead speed."
@@ -129,8 +164,62 @@ class Coach(Agent):
             message = f"Focus your next session on {', '.join(w['weak_keys'][:3])}. Short targeted drills will give you better gains than another random test."
         else:
             message = "Your fundamentals are holding. Use timed sessions to raise pace while protecting accuracy and rhythm."
+        
+        diff = context["plan"].get("difficulty_action", "baseline")
+        if diff == "reduce_speed_gate":
+            message += " Difficulty adjusted: Lowering speed targets to prioritize precision."
+        elif diff == "increase_speed_gate":
+            message += " Difficulty adjusted: Raising target limits. Push your speed slightly."
+
         message += f" Recommended mode: {plan['mode'].replace('_', ' ')} for about {plan['minutes']} minutes."
         return AgentResult(self.name, "ok", 0.87, {"message": message}, [p["state"], plan["mode"]])
+
+
+class PrivacyGuard(Agent):
+    name = "privacy_guard"
+    required_inputs = ("performance", "weaknesses", "plan", "coach")
+
+    def run(self, context: dict[str, Any]) -> AgentResult:
+        p = context["performance"]
+        w = context["weaknesses"]
+        plan = context["plan"]
+        coach = context["coach"]
+        
+        safe_context = {
+            "state": p.get("state"),
+            "wpm": p.get("avg_wpm"),
+            "accuracy": p.get("avg_accuracy"),
+            "weak_keys": w.get("weak_keys", []),
+            "slow_digraphs": w.get("slow_digraphs", []),
+            "plan_mode": plan.get("mode"),
+            "plan_minutes": plan.get("minutes"),
+            "deterministic_advice": coach.get("message")
+        }
+        return AgentResult(self.name, "ok", 1.0, {"safe_context": safe_context}, ["PII stripped"])
+
+
+class LLMCoach(Agent):
+    name = "llm_coach"
+    required_inputs = ("privacy_guard",)
+
+    def run(self, context: dict[str, Any]) -> AgentResult:
+        safe_ctx = context["privacy_guard"]["safe_context"]
+        
+        system_prompt = (
+            "You are an expert typing coach. You receive a learner's metrics and a deterministic piece of advice. "
+            "Rewrite the advice into a concise, encouraging, and highly actionable 2-sentence coaching tip. "
+            "Do NOT invent new metrics or ignore the deterministic advice. Just make it sound natural and expert. "
+            "Respond ONLY with the coaching text."
+        )
+        prompt = f"Learner state: {safe_ctx['state']}\nMetrics: {safe_ctx['wpm']} WPM, {safe_ctx['accuracy']}% Acc\nDeterministic Advice: {safe_ctx['deterministic_advice']}\n\nProvide the 2-sentence coach message:"
+        
+        llm = LocalModelProvider()
+        response = llm.generate(prompt, system=system_prompt)
+        
+        if response:
+            return AgentResult(self.name, "ok", 0.85, {"message": response, "is_llm": True}, ["local llm generation"])
+        else:
+            return AgentResult(self.name, "skipped", 1.0, {"message": safe_ctx["deterministic_advice"], "is_llm": False}, ["llm offline, fallback deterministic"])
 
 
 class Validator(Agent):
@@ -153,7 +242,16 @@ class MultiAgentOrchestrator:
     """Deterministic local agent pipeline. Optional LLM adapters can consume its structured context later."""
 
     def __init__(self) -> None:
-        self.agents: list[Agent] = [PerformanceAnalyst(), WeaknessDetector(), CurriculumPlanner(), Coach(), Validator()]
+        self.agents: list[Agent] = [
+            PerformanceAnalyst(), 
+            WeaknessDetector(), 
+            CurriculumPlanner(), 
+            DifficultyController(), 
+            Coach(), 
+            PrivacyGuard(),
+            LLMCoach(),
+            Validator()
+        ]
 
     def run(self, dashboard: dict[str, Any]) -> dict[str, Any]:
         context: dict[str, Any] = {"dashboard": dashboard}
@@ -169,8 +267,17 @@ class MultiAgentOrchestrator:
                 context["weaknesses"] = result.output
             elif agent.name == "curriculum_planner":
                 context["plan"] = result.output
+            elif agent.name == "difficulty_controller":
+                context["difficulty"] = result.output
             elif agent.name == "coach":
                 context["coach"] = result.output
+            elif agent.name == "privacy_guard":
+                context["privacy_guard"] = result.output
+            elif agent.name == "llm_coach":
+                context["llm_coach"] = result.output
+                if result.status == "ok":
+                    context["coach"]["message"] = result.output["message"]
+                    context["coach"]["is_llm"] = True
             elif agent.name == "validator":
                 context["validation"] = result.output
         return {
