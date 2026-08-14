@@ -109,6 +109,17 @@ The rebuilt UI is intentionally centered on:
 
 The favicon and desktop-window icon use a Python-inspired blue/yellow KeyFlow mark so the application identity is consistent across the window and HTML shell.
 
+## Antigravity SDLC Architecture
+
+KeyFlow utilizes a massive, enterprise-grade AI developer environment built via Antigravity Customizations. It enforces strict deterministic, local-first architecture via meta-agents:
+
+- **12 Principal Meta-Agents**: `keyflow-cto`, `keyflow-architecture-reviewer`, `keyflow-python-engineer`, `keyflow-ui-engineer`, `keyflow-pm`, `keyflow-qa-engineer`, `keyflow-ai-engineer`, `keyflow-security-reviewer`, `keyflow-performance-reviewer`, `keyflow-production-readiness-reviewer`, `keyflow-requirements-auditor`, `keyflow-release-gate`.
+- **11 Core Rules**: Strict developer guardrails ensuring local-first boundaries (`00-core`, `04-adaptive-learning`, `07-security-and-privacy`, etc).
+- **10 Advanced Skills**: Developer runbooks (`cicd-quality-gates`, `observability-sre`, `security-zero-trust`, etc).
+- **7 Workflows**: Procedural execution SOPs (`01-cto-gap-analysis`, `06-release-gate`, `07-post-incident-forensics`).
+
+This suite automates our strictly local-first SDLC, allowing complex pipeline features to be built parallelly by specialized AI roles.
+
 ## Advanced roadmap
 
 ### Typing intelligence
