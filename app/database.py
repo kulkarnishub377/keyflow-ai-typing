@@ -97,6 +97,10 @@ class Database:
                 CREATE INDEX IF NOT EXISTS idx_key_errors_user ON key_errors(user_id);
                 """
             )
+            try:
+                con.execute("ALTER TABLE sessions ADD COLUMN telemetry_blob TEXT")
+            except sqlite3.OperationalError:
+                pass
 
     def register(self, username: str, password: str, display_name: str) -> dict[str, Any]:
         username = username.strip().lower()
@@ -148,8 +152,8 @@ class Database:
         with self.connect() as con:
             cur = con.execute(
                 """
-                INSERT INTO sessions(user_id,lesson_id,duration_seconds,total_chars,correct_chars,incorrect_chars,backspaces,wpm,accuracy,text_prompt,created_at)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                INSERT INTO sessions(user_id,lesson_id,duration_seconds,total_chars,correct_chars,incorrect_chars,backspaces,wpm,accuracy,text_prompt,telemetry_blob,created_at)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     user_id,
@@ -162,6 +166,7 @@ class Database:
                     float(payload["wpm"]),
                     float(payload["accuracy"]),
                     payload["text_prompt"],
+                    json.dumps(payload.get("timing", [])),
                     now,
                 ),
             )

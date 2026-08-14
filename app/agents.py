@@ -30,16 +30,24 @@ class PerformanceAnalyst(Agent):
         sessions = int(d.get("sessions", 0))
         avg_wpm = float(d.get("avg_wpm", 0))
         acc = float(d.get("avg_accuracy", 0))
+        telemetry = d.get("latest_telemetry", [])
+        avg_latency = 0.0
+        if telemetry:
+            latencies = [x["latency"] for x in telemetry if x.get("latency", 0) > 0]
+            if latencies:
+                avg_latency = sum(latencies) / len(latencies)
         if sessions == 0:
             state = "new_learner"
         elif acc < 92:
             state = "accuracy_first"
+        elif avg_latency > 300:
+            state = "mechanical_latency"
         elif avg_wpm < 40:
             state = "fluency_building"
         else:
             state = "speed_and_consistency"
-        return AgentResult(self.name, "ok", 0.96, {"state": state, "sessions": sessions, "avg_wpm": avg_wpm, "avg_accuracy": acc}, [
-            f"sessions={sessions}", f"avg_wpm={avg_wpm:.1f}", f"avg_accuracy={acc:.1f}%"
+        return AgentResult(self.name, "ok", 0.96, {"state": state, "sessions": sessions, "avg_wpm": avg_wpm, "avg_accuracy": acc, "avg_latency": avg_latency}, [
+            f"sessions={sessions}", f"avg_latency={avg_latency:.1f}ms", f"avg_accuracy={acc:.1f}%"
         ])
 
 
@@ -48,14 +56,32 @@ class WeaknessDetector(Agent):
     required_inputs = ("dashboard",)
 
     def run(self, context: dict[str, Any]) -> AgentResult:
-        weak = context["dashboard"].get("weak_keys", [])
+        d = context["dashboard"]
+        weak = d.get("weak_keys", [])
         keys = [str(x.get("expected_key", "")).upper() for x in weak[:5] if x.get("expected_key")]
-        if keys:
+        telemetry = d.get("latest_telemetry", [])
+        slow_digraphs: list[str] = []
+        if telemetry:
+            for i in range(1, len(telemetry)):
+                if 400 < telemetry[i]["latency"] < 2000:
+                    slow_digraphs.append(telemetry[i-1]["key"] + "->" + telemetry[i]["key"])
+            from collections import Counter
+            counts = Counter(slow_digraphs)
+            slow_digraphs = [k for k, v in counts.most_common(3) if v > 2]
+        if slow_digraphs:
+            recommendation = f"Target transition latency, specifically on: {', '.join(slow_digraphs)}."
+            confidence = 0.93
+            evidence = "digraph latency analysis"
+        elif keys:
             recommendation = f"Target {', '.join(keys[:3])} with short, repeated drills."
+            confidence = 0.91
+            evidence = "key error aggregation"
         else:
             recommendation = "Collect more sessions before making key-level conclusions."
-        return AgentResult(self.name, "ok", 0.91 if keys else 0.74, {"weak_keys": keys, "recommendation": recommendation}, [
-            "key error aggregation" if keys else "insufficient key-error history"
+            confidence = 0.74
+            evidence = "insufficient key-error history"
+        return AgentResult(self.name, "ok", confidence, {"weak_keys": keys, "slow_digraphs": slow_digraphs, "recommendation": recommendation}, [
+            evidence
         ])
 
 
@@ -93,7 +119,9 @@ class Coach(Agent):
         p = context["performance"]
         w = context["weaknesses"]
         plan = context["plan"]
-        if p["state"] == "new_learner":
+        if p.get("state") == "mechanical_latency" and w.get("slow_digraphs"):
+            message = f"Your fingers are hesitating on certain transitions. Focus on rolling smoothly through {', '.join(w['slow_digraphs'])}."
+        elif p["state"] == "new_learner":
             message = "Start with clean home-row habits. Keep the hands relaxed and let accuracy lead speed."
         elif p["state"] == "accuracy_first":
             message = "Your next gain should come from cleaner repetitions. Slow down until mistakes become rare, then build speed again."

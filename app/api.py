@@ -58,7 +58,12 @@ class API:
 
     def ai_coach(self) -> dict[str, Any]:
         """Run the local deterministic agent pipeline on the current learner profile."""
-        return self.orchestrator.run(self.db.dashboard(self._require_user()))
+        d = self.db.dashboard(self._require_user())
+        with self.db.connect() as con:
+            row = con.execute("SELECT telemetry_blob FROM sessions WHERE user_id=? ORDER BY id DESC LIMIT 1", (self._require_user(),)).fetchone()
+            if row and row["telemetry_blob"]:
+                d["latest_telemetry"] = json.loads(row["telemetry_blob"])
+        return self.orchestrator.run(d)
 
     def progress(self) -> list[dict[str, Any]]:
         return self.db.progress(self._require_user())

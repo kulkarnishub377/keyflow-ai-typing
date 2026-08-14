@@ -32,6 +32,32 @@ class CoreTests(unittest.TestCase):
             self.assertGreater(dash['best_wpm'], 0)
             self.assertEqual(dash['weak_keys'][0]['expected_key'], 'r')
 
+    def test_agent_digraph_heuristics(self):
+        from app.agents import MultiAgentOrchestrator
+        telemetry = [
+            {"key": "t", "latency": 100, "timestamp": 1000},
+            {"key": "h", "latency": 450, "timestamp": 1450}, # Slow
+            {"key": "e", "latency": 100, "timestamp": 1550},
+            {"key": "t", "latency": 100, "timestamp": 1650},
+            {"key": "h", "latency": 450, "timestamp": 2100}, # Slow
+            {"key": "e", "latency": 100, "timestamp": 2200},
+            {"key": "t", "latency": 100, "timestamp": 2300},
+            {"key": "h", "latency": 450, "timestamp": 2750}, # Slow
+            {"key": "e", "latency": 100, "timestamp": 2850},
+        ]
+        dashboard = {
+            "sessions": 5,
+            "avg_wpm": 60.0,
+            "avg_accuracy": 98.0,
+            "latest_telemetry": telemetry
+        }
+        orch = MultiAgentOrchestrator()
+        result = orch.run(dashboard)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["performance"]["state"], "mechanical_latency")
+        self.assertIn("t->h", result["weaknesses"]["slow_digraphs"])
+        self.assertIn("t->h", result["coach"]["message"])
+
 
 if __name__ == '__main__':
     unittest.main()
