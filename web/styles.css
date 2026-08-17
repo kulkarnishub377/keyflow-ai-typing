@@ -488,9 +488,11 @@ button { cursor: pointer; border: none; outline: none; }
   box-shadow: 0 4px 0 var(--line);
   transition: all 0.1s ease;
 }
-.keycap:active {
+.keycap:active, .keycap.active {
   transform: translateY(4px);
   box-shadow: 0 0 0 var(--line);
+  border-color: var(--brand);
+  background: rgba(99, 102, 241, 0.2);
 }
 .keycap.wide { min-width: 80px; }
 .keycap.space { min-width: 300px; }

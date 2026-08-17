@@ -1,216 +1,178 @@
-# KeyFlow AI Typing
+<div align="center">
+  <img src="web/favicon.png" alt="KeyFlow Logo" width="120" height="120" />
+  <h1>KeyFlow AI Typing</h1>
+  <p><strong>Advanced, Offline-First, Local AI Typing Engine & Learning Workspace</strong></p>
 
-> Advanced local-first typing trainer and adaptive-learning desktop foundation built with HTML/CSS/JavaScript, Python, pywebview, and SQLite.
+  <!-- Badges -->
+  <p>
+    <img alt="Python Version" src="https://img.shields.io/badge/python-3.11+-blue.svg?style=for-the-badge&logo=python&logoColor=white" />
+    <img alt="Platform" src="https://img.shields.io/badge/platform-windows%20%7C%20macOS%20%7C%20linux-lightgrey.svg?style=for-the-badge&logo=windows" />
+    <img alt="Zero Cloud Dependency" src="https://img.shields.io/badge/architecture-offline--first-success.svg?style=for-the-badge" />
+    <img alt="AI Integration" src="https://img.shields.io/badge/ai-local%20Ollama%20models-orange.svg?style=for-the-badge&logo=ollama" />
+  </p>
+</div>
 
-KeyFlow is designed to become a serious keyboard-learning workstation: structured beginner education, focused practice, deep performance analytics, adaptive learning, and optional local AI coaching — without requiring a cloud backend for the core experience.
+<br/>
 
-## What this version contains
+## 📖 Table of Contents
+- [About KeyFlow](#-about-keyflow)
+- [Key Features](#-key-features)
+- [Multi-Agent Pipeline](#-multi-agent-pipeline)
+- [Project Sprints (Roadmap)](#-project-sprints-roadmap)
+- [Installation & Running](#-installation--running)
+- [Building for Production](#-building-for-production)
+- [Privacy & Security](#-privacy--security)
+- [Contributing](#-contributing)
 
-### Product
+---
 
-- Modern desktop UI rebuilt around a focused learning workspace
-- Local user registration/login
-- Beginner learning path
-- Interactive typing practice
-- WPM / accuracy / error tracking
-- Progress analytics and weak-key visualization
-- Daily practice goal
-- Dark/light themes
-- Local JSON backup
-- Python-based local AI coach pipeline
+## ⚡ About KeyFlow
 
-### Agentic foundation
+Most typing platforms measure Speed (WPM) and Accuracy as a generic aggregate across an entire session. **KeyFlow is fundamentally different.** 
 
-- `AGENTS.md` with role definitions and non-negotiable rules
-- 10 agent roles documented as independent skills
-- Learning and safety rules
-- Versioned JSON schemas for structured outputs
-- Deterministic multi-agent orchestration in `app/agents.py`
-- Explicit validation and auditable execution trace
-- Privacy/least-privilege design for future local model adapters
+KeyFlow captures data at the **micro-keystroke level**, recording precise `t -> h` transition bottlenecks, right/left-hand imbalances, and rhythm variances. Built upon a deterministic local agent pipeline and a beautiful glassmorphism interface, KeyFlow acts as your private, hyper-analytical typing coach.
 
-## Current architecture
+**Core Philosophy: Zero Cloud Dependency.** 
+Everything—from telemetry storage to AI-driven curriculum generation—runs entirely on your local machine.
 
-```text
-HTML + CSS + JavaScript
-        │
-        ▼
-     pywebview
-        │
-        ▼
-      Python
-   ┌────┴────────┐
-   │             │
- SQLite      Agent layer
-               │
-         rules + skills
-               │
-      optional local AI later
-```
+---
 
-The repository is intentionally **not** described as Tauri/Rust. The current desktop stack is Python + pywebview + SQLite.
+## ✨ Key Features
 
-## Why local-first?
+- **Micro-Telemetry Engine:** High-resolution `performance.now()` latency tracking for every keystroke.
+- **Glassmorphism UI:** A bespoke, 60fps, responsive dark-mode interface powered entirely by Vanilla CSS. No heavy frontend frameworks.
+- **20-Lesson Master Curriculum:** A progressive learning path spanning basic Home Row anchors, advanced digraph rolls, and complex programming syntaxes (`[]{}&&||`).
+- **Dynamic Difficulty Controller:** A mathematical gating mechanism that automatically unlocks higher speed targets only when strict accuracy consistency (97%+) is achieved.
+- **Interactive Keyboard Map:** A real-time visual heat map and keystroke tracker.
+- **Encrypted Local Backups:** Full SQLite data dumps are symmetrically encrypted using AES-256 (`cryptography.fernet`) to secure your keystroke dynamics at rest.
 
-Typing is an interaction-heavy workload. Core practice should remain responsive and usable without an internet connection. Keeping learner data local also makes the privacy boundary easy to understand.
+---
 
-The current core has no required cloud backend, cloud database, or remote AI service.
+## 🤖 Multi-Agent Pipeline
 
-## Multi-agent design
+KeyFlow's local decision engine uses a strict sequence of specialized, deterministic agents that pass structured state forward.
 
-The agent system is intentionally deeper than a single prompt. It separates measurement from reasoning and reasoning from generated coaching.
+1. **`PerformanceAnalyst`**: Analyzes telemetry to calculate WPM, accuracy, and identify erratic rhythm states.
+2. **`WeaknessDetector`**: Isolates specific expected-key bottlenecks.
+3. **`CurriculumPlanner`**: Selects the absolute best next-focus area for the learner.
+4. **`DifficultyController`**: Modulates the WPM and Accuracy gates based on historical trends.
+5. **`Coach`**: Builds the mathematical, deterministic recommendation.
+6. **`PrivacyGuard`**: A pre-processing agent that meticulously strips PII (usernames, local paths) from the payload.
+7. **`LLMCoach` (Optional)**: Connects to a local instance of Ollama to synthesize the deterministic output into an engaging, highly personalized message.
+8. **`Validator`**: Ensures all agent outputs meet strict schema and safety requirements before rendering to the UI.
 
-```text
-Session telemetry
-      ↓
-Performance Analyst
-      ↓
-Weakness Detector
-      ↓
-Curriculum Planner
-      ↓
-Difficulty Controller / Exercise Generator
-      ↓
-Quality Validator
-      ↓
-Coach
-      ↓
-Session Reviewer
-```
+---
 
-### Roles
+## 🚀 Project Sprints (Roadmap)
 
-1. Performance Analyst
-2. Weakness Detector
-3. Curriculum Planner
-4. Exercise Generator
-5. Difficulty Controller
-6. Coach
-7. Session Reviewer
-8. Quality Validator
-9. Privacy Guard
-10. Orchestrator
+KeyFlow was developed in three rigorous stages:
 
-Read `AGENTS.md` for detailed rules, permissions, evidence requirements, failure behavior, and evaluation principles.
+### Sprint 1: Typing Intelligence
+- [x] High-resolution telemetry tracking setup.
+- [x] SQLite blob storage for infinite-length telemetry arrays.
+- [x] Deterministic heuristic analysis to calculate precise `t -> h` transition delays.
 
-## UI / UX direction
+### Sprint 2: Adaptive Learning & Premium UI
+- [x] Comprehensive 20-Lesson master sequence.
+- [x] Advanced Difficulty Gating logic based on historical mastery.
+- [x] Premium glassmorphism UI overhaul with dynamic keycap lighting.
 
-The rebuilt UI is intentionally centered on:
+### Sprint 3: Local AI Coaching & Production Packaging
+- [x] Integration of the `PrivacyGuard` and `LLMCoach` (Ollama localhost abstraction).
+- [x] `SecureBackupEngine` implementation using `cryptography` for encrypted data exports.
+- [x] Production `build.spec` using PyInstaller for standalone, zero-dependency desktop executables.
+- [x] Complete CI/CD GitHub Actions pipeline.
 
-- clear hierarchy
-- fewer competing actions
-- fast practice entry
-- glanceable performance metrics
-- visible local/privacy status
-- consistent controls
-- dark/light theme support
-- accessible responsive behavior
-- a dedicated AI Coach workspace
+---
 
-The favicon and desktop-window icon use a Python-inspired blue/yellow KeyFlow mark so the application identity is consistent across the window and HTML shell.
+## 🛠️ Installation & Running
 
-## Antigravity SDLC Architecture
-
-KeyFlow utilizes a massive, enterprise-grade AI developer environment built via Antigravity Customizations. It enforces strict deterministic, local-first architecture via meta-agents:
-
-- **12 Principal Meta-Agents**: `keyflow-cto`, `keyflow-architecture-reviewer`, `keyflow-python-engineer`, `keyflow-ui-engineer`, `keyflow-pm`, `keyflow-qa-engineer`, `keyflow-ai-engineer`, `keyflow-security-reviewer`, `keyflow-performance-reviewer`, `keyflow-production-readiness-reviewer`, `keyflow-requirements-auditor`, `keyflow-release-gate`.
-- **11 Core Rules**: Strict developer guardrails ensuring local-first boundaries (`00-core`, `04-adaptive-learning`, `07-security-and-privacy`, etc).
-- **10 Advanced Skills**: Developer runbooks (`cicd-quality-gates`, `observability-sre`, `security-zero-trust`, etc).
-- **7 Workflows**: Procedural execution SOPs (`01-cto-gap-analysis`, `06-release-gate`, `07-post-incident-forensics`).
-
-This suite automates our strictly local-first SDLC, allowing complex pipeline features to be built parallelly by specialized AI roles.
-
-## Advanced roadmap
-
-### Typing intelligence
-
-- [ ] Per-key latency
-- [ ] Finger mapping
-- [ ] Left/right-hand balance
-- [ ] Digraph/trigraph latency
-- [ ] Rhythm/consistency model
-- [ ] Backspace/correction model
-- [ ] Numeric and punctuation analytics
-
-### Adaptive learning
-
-- [ ] Skill graph and prerequisites
-- [ ] Mastery state machine
-- [ ] Sample-size-aware weakness detection
-- [ ] Personalized lesson sequencing
-- [ ] Constrained exercise generation
-- [ ] Dynamic difficulty controller
-
-### Local AI
-
-- [ ] Local model provider abstraction
-- [ ] Model capability registry
-- [ ] Privacy-filtered model context
-- [ ] Optional local LLM coach
-- [ ] Agent evaluation benchmark
-- [ ] Model fallback and validation
-
-### Production desktop
-
-- [ ] Signed installers
-- [ ] Encrypted backups
-- [ ] Installer/update strategy
-- [ ] Accessibility audit
-- [ ] Full integration test suite
-- [ ] Performance profiling
-
-Online social features, tournaments, and public competition remain out of scope for this local-first phase.
-
-## Run locally
-
-Requirements:
-
+### Requirements
 - Python 3.11+
-- Windows is the current primary target
+- Windows / macOS / Linux
+- [Ollama](https://ollama.com/) (Optional: Only required if using the Generative AI Coach)
+
+### Run from Source
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/keyflow-local.git
+   cd keyflow-local
+   ```
+
+2. **Set up virtual environment**
+   ```bash
+   python -m venv .venv
+   # Windows:
+   .venv\Scripts\activate
+   # macOS/Linux:
+   source .venv/bin/activate
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Launch the Application**
+   ```bash
+   python run.py
+   ```
+
+*(If Ollama is running on `localhost:11434` with the default model, the AI Coach will automatically engage. Otherwise, it safely falls back to the deterministic coach).*
+
+---
+
+## 📦 Building for Production
+
+To distribute KeyFlow as a standalone `.exe` without requiring users to install Python, use the bundled PyInstaller specification.
+
+1. **Install PyInstaller**
+   ```bash
+   pip install pyinstaller
+   ```
+
+2. **Run the Build Process**
+   ```bash
+   pyinstaller build.spec --clean -y
+   ```
+
+The compiled standalone executable will be generated inside the `dist/` directory.
+
+---
+
+## 🧪 Testing
+
+Run the full integration test suite to validate the Multi-Agent pipeline, the difficulty controller logic, and the encryption engine.
 
 ```bash
-python -m venv .venv
+python -m unittest discover
 ```
 
-PowerShell:
+---
 
-```powershell
-.venv\\Scripts\\Activate.ps1
-```
+## 🛡️ Privacy & Security
 
-Install:
+KeyFlow operates on a **Zero-Trust** basis with telemetry data.
+- **No Cloud Trackers**: There are zero API calls made to remote servers. The application works completely off-grid.
+- **Sanitization Checkpoints**: The `PrivacyGuard` acts as an absolute boundary, preventing identifiable local data from being fed into the LLM context window.
+- **Encrypted Exports**: When you export your profile, it is AES-256 encrypted to prevent malicious actors from accessing your keystroke timings (which can sometimes be used to deanonymize users).
 
-```bash
-pip install -r requirements.txt
-```
+---
 
-Run:
+## 🤝 Contributing
 
-```bash
-python run.py
-```
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
+3. Adhere strictly to the project's **Deterministic-First** local privacy guidelines.
+4. Run the test suite (`python -m unittest discover`).
+5. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+6. Push to the branch (`git push origin feature/AmazingFeature`).
+7. Open a Pull Request.
 
-## Test
+---
 
-```bash
-python -m unittest discover -s tests -v
-python -m compileall -q app run.py
-```
-
-## Repository guide
-
-```text
-AGENTS.md                Agent roles, rules, safety boundaries
-ARCHITECTURE.md          Runtime and data boundaries
-AI_ROADMAP.md            Advanced local AI roadmap
-CONTRIBUTING.md          Development workflow
-SECURITY.md              Security and privacy policy
-agents/                  Skills, rules, schemas
-app/                     Python application/backend
-web/                     HTML/CSS/JavaScript UI
-.github/                 CI and issue/PR templates
-```
-
-## License
-
-No open-source license has been selected yet. Until a license is added, normal copyright restrictions apply.
+<div align="center">
+  <p>Built with precision by the KeyFlow AI Meta-Agents.</p>
+</div>

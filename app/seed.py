@@ -38,15 +38,11 @@ LESSONS = [
 
 def seed(db: Database) -> None:
     with db.connect() as con:
-        count = con.execute("SELECT COUNT(*) FROM lessons").fetchone()[0]
-        if count >= len(LESSONS):
-            return
+        existing_titles = {r[0] for r in con.execute("SELECT title FROM lessons").fetchall()}
+        new_lessons = [l for l in LESSONS if l[0] not in existing_titles]
         
-        # If we have some lessons but want the full 20, let's just clear and reseed for this update
-        if count > 0 and count < len(LESSONS):
-            con.execute("DELETE FROM lessons")
-            
-        con.executemany(
-            "INSERT INTO lessons(title,level,description,content,focus_keys,duration_minutes,sort_order) VALUES(?,?,?,?,?,?,?)",
-            LESSONS,
-        )
+        if new_lessons:
+            con.executemany(
+                "INSERT INTO lessons(title,level,description,content,focus_keys,duration_minutes,sort_order) VALUES(?,?,?,?,?,?,?)",
+                new_lessons,
+            )
