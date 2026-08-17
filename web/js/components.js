@@ -76,10 +76,6 @@ function layout(content, title, subtitle) {
             <aside class="sidebar">
                 <div class="brand">
                     ${logo()}
-                    <div>
-                        <div class="brand-text">Key<span>Flow</span></div>
-                        <span class="brand-sub">AI Typing</span>
-                    </div>
                 </div>
                 <nav class="nav">
                     ${navButton('dashboard', '⌂', 'Dashboard')}

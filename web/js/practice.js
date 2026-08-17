@@ -9,6 +9,7 @@ function renderPractice() {
         state.practice = { lessonId: l.id, prompt: l.content, started: null, finished: false, backspaces: 0 };
     }
     
+    const row0 = '1234567890-='.split('').map(k => `<span class="keycap" data-key="${k}">${k}</span>`).join('');
     const row1 = 'QWERTYUIOP'.split('').map(k => `<span class="keycap" data-key="${k.toLowerCase()}">${k}</span>`).join('');
     const row2 = 'ASDFGHJKL'.split('').map(k => `<span class="keycap" data-key="${k.toLowerCase()}">${k}</span>`).join('');
     const row3 = 'ZXCVBNM'.split('').map(k => `<span class="keycap" data-key="${k.toLowerCase()}">${k}</span>`).join('');
@@ -33,8 +34,8 @@ function renderPractice() {
                 <div class="practice-metric"><span>Time</span><strong id="live-time">0.0s</strong></div>
             </div>
             
-            <div id="prompt" class="prompt"></div>
-            <textarea id="typingInput" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Start typing the passage here..."></textarea>
+            <div id="prompt" class="prompt" onclick="document.getElementById('typingInput').focus()" style="cursor:text"></div>
+            <textarea id="typingInput" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
             
             <section class="card keyboard-card">
                 <div class="section-head">
@@ -43,6 +44,7 @@ function renderPractice() {
                         <p>Visual reference for the current exercise</p>
                     </div>
                 </div>
+                <div class="keyboard-row">${row0}</div>
                 <div class="keyboard-row">${row1}</div>
                 <div class="keyboard-row">${row2}</div>
                 <div class="keyboard-row">${row3}</div>
@@ -74,6 +76,32 @@ function setupTyping() {
             const status = i < typed.length ? (typed[i] === ch ? 'done' : 'bad') : i === typed.length ? 'current' : 'pending';
             return `<span class="${status}">${ch === ' ' ? '·' : esc(ch)}</span>`;
         }).join('');
+        
+        document.querySelectorAll('.keycap.next').forEach(el => el.classList.remove('next'));
+        
+        const nextChar = text[typed.length];
+        if (nextChar) {
+            const isUpper = /[A-Z]/.test(nextChar);
+            const isShiftSymbol = '~_+{}|:"<>?!@#$%^&*()'.includes(nextChar);
+            
+            if (isUpper || isShiftSymbol) {
+                const shiftKey = document.querySelector(`.keycap[data-key="shift"]`);
+                if (shiftKey) shiftKey.classList.add('next');
+            }
+            
+            const shiftMap = {
+                '~':'`', '_':'-', '+':'=', '{':'[', '}':']', '|':'\\\\', ':':';', '"':"'", '<':',', '>':'.', '?':'/',
+                '!':'1', '@':'2', '#':'3', '$':'4', '%':'5', '^':'6', '&':'7', '*':'8', '(':'9', ')':'0'
+            };
+            const mappedKey = shiftMap[nextChar] || nextChar.toLowerCase();
+            
+            let keySelector = mappedKey;
+            if (nextChar === ' ') keySelector = 'space';
+            else if (nextChar === '\\n') keySelector = 'enter';
+            
+            const keycap = document.querySelector(`.keycap[data-key="${keySelector}"]`);
+            if (keycap) keycap.classList.add('next');
+        }
     };
     
     paint('');

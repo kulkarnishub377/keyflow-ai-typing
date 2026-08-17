@@ -17,10 +17,6 @@ function renderAuth() {
                 <div class="auth-left">
                     <div class="logo-line">
                         ${logo()}
-                        <div>
-                            <b style="font-size:20px">KeyFlow</b>
-                            <small class="brand-sub">AI Typing</small>
-                        </div>
                     </div>
                     <h1>Build typing skill that actually lasts.</h1>
                     <p class="subtitle" style="color:#9eb0c8">

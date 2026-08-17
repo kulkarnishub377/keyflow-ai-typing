@@ -33,3 +33,23 @@ window.logout = logout;
 // Initialization
 window.addEventListener('pywebviewready', boot);
 setTimeout(() => { if (window.pywebview?.api) boot(); }, 500);
+
+async function boot() {
+    if (window._booted) return;
+    window._booted = true;
+    try {
+        const b = await api('get_bootstrap');
+        state.user = b.user;
+        state.lessons = b.lessons || [];
+        if (b.user) {
+            state.progress = b.progress || [];
+            state.dashboard = b.dashboard;
+            state.settings = b.settings || state.settings;
+        }
+        applyTheme();
+        render();
+    } catch(e) {
+        console.error(e);
+        if (typeof renderError === 'function') renderError(e.message || String(e));
+    }
+}
