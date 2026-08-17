@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="web/favicon.png" alt="KeyFlow Logo" width="120" height="120" />
+  <img src="keyflow_logo.png" alt="KeyFlow Logo" width="120" height="120" />
   <h1>KeyFlow AI Typing</h1>
   <p><strong>Advanced, Offline-First, Local AI Typing Engine & Learning Workspace</strong></p>
 

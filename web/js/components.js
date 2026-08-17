@@ -16,7 +16,7 @@ function initials(name) {
 }
 
 function logo() {
-    return `<img class="brand-mark" src="favicon.svg" alt="KeyFlow Python logo">`;
+    return `<img class="brand-mark" src="../keyflow_logo.png" alt="KeyFlow logo">`;
 }
 
 function navButton(route, icon, label) {
