@@ -8,6 +8,7 @@ import webview
 
 from .database import Database
 from .agents import MultiAgentOrchestrator
+from .advanced_engine import AdvancedTypingEngine
 
 
 class API:
@@ -16,6 +17,7 @@ class API:
         self.user: dict[str, Any] | None = None
         self._window = None
         self.orchestrator = MultiAgentOrchestrator()
+        self.advanced = AdvancedTypingEngine(db)
 
     def _require_user(self) -> int:
         if not self.user:
@@ -57,13 +59,30 @@ class API:
         return self.db.dashboard(self._require_user())
 
     def ai_coach(self) -> dict[str, Any]:
-        """Run the local deterministic agent pipeline on the current learner profile."""
-        d = self.db.dashboard(self._require_user())
+        """Run the local deterministic + optional local LLM coaching pipeline."""
+        return self.advanced.run_and_record_coach(self._require_user(), self.orchestrator)
+
+    def advanced_analytics(self) -> dict[str, Any]:
+        uid = self._require_user()
+        analysis = self.advanced.analyze(uid)
+        self.advanced.persist_analysis(uid, analysis)
+        return analysis
+
+    def adaptive_plan(self) -> dict[str, Any]:
+        return self.advanced.adaptive_plan(self._require_user())
+
+    def developer_snapshot(self) -> dict[str, Any]:
+        return self.advanced.developer_snapshot(self._require_user())
+
+    def agent_history(self, limit: int = 20) -> list[dict[str, Any]]:
+        uid = self._require_user()
+        limit = max(1, min(100, int(limit)))
         with self.db.connect() as con:
-            row = con.execute("SELECT telemetry_blob FROM sessions WHERE user_id=? ORDER BY id DESC LIMIT 1", (self._require_user(),)).fetchone()
-            if row and row["telemetry_blob"]:
-                d["latest_telemetry"] = json.loads(row["telemetry_blob"])
-        return self.orchestrator.run(d)
+            rows = con.execute(
+                "SELECT id,run_type,status,duration_ms,confidence,summary,created_at FROM agent_runs WHERE user_id=? ORDER BY id DESC LIMIT ?",
+                (uid, limit),
+            ).fetchall()
+        return [dict(r) for r in rows]
 
     def progress(self) -> list[dict[str, Any]]:
         return self.db.progress(self._require_user())
@@ -83,7 +102,12 @@ class API:
         return {"path": str(out)}
 
     def choose_backup_path(self) -> dict[str, Any]:
-        result = webview.windows[0].create_file_dialog(webview.SAVE_DIALOG, directory=str(Path.home()), save_filename="keyflow-backup.json", file_types=("JSON files (*.json)", "All files (*.*)"))
+        result = webview.windows[0].create_file_dialog(
+            webview.SAVE_DIALOG,
+            directory=str(Path.home()),
+            save_filename="keyflow-backup.json",
+            file_types=("JSON files (*.json)", "All files (*.*)")
+        )
         if not result:
             return {"path": None}
         return {"path": result[0]}

@@ -1,12 +1,9 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *$py.class
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
 
 # Virtual environments
 .venv/
@@ -19,35 +16,9 @@ build/
 dist/
 *.spec
 *.egg-info/
+wheelhouse/
 
-# Local application state
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
-data/
-backups/
-exports/
-
-# AI / ML artifacts
-models/
-*.gguf
-*.onnx
-*.bin
-*.safetensors
-
-# Logs and temp files
-*.log
-*.tmp
-.cache/
-
-# Environment / secrets
-.env
-.env.*
-!.env.example
-
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.code-workspace
@@ -55,17 +26,52 @@ models/
 # OS
 .DS_Store
 Thumbs.db
-Desktop.ini
+desktop.ini
 
-# Coverage / profiling
-.prof
-.profraw
+# Runtime / logs
+*.log
+logs/
+tmp/
+temp/
 
-# Frontend tooling caches
-node_modules/
-.npm/
+# Local application data
+*.db
+*.sqlite
+*.sqlite3
+data/
+backups/
+exports/
 
-# Editor backups
-*.swp
-*.swo
-*~
+# Local AI model/cache artifacts
+models/
+model_cache/
+*.gguf
+*.safetensors
+*.onnx
+ollama/
+.cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+
+# Generated assets
+generated/
+screenshots/
