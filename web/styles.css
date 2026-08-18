@@ -425,7 +425,7 @@ button { cursor: pointer; border: none; outline: none; }
 
 .chart{height:220px;display:flex;align-items:flex-end;gap:8px;padding:22px 4px 4px}.bar{flex:1;max-width:58px;background:var(--brand-gradient);border-radius:8px 8px 3px 3px;min-height:7px;position:relative}.bar span{position:absolute;top:-18px;width:100%;text-align:center;color:var(--muted);font-size:9px}.bar em{position:absolute;bottom:-19px;width:100%;text-align:center;color:var(--muted);font-size:9px;font-style:normal}
 
-/* Practice Prompt */
+/* Practice Prompt & Multi-Paragraph Styling */
 .practice { max-width: 1120px; margin: 0 auto; }
 .practice-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; }
 .practice-title h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: -0.03em; }
@@ -434,24 +434,98 @@ button { cursor: pointer; border: none; outline: none; }
 .practice-metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; }
 .practice-metric strong { display: block; font-size: 28px; font-weight: 900; margin-top: 6px; color: var(--brand); }
 
+.passage-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.passage-tab {
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.passage-tab:hover {
+  background: var(--surface-3);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+.passage-tab.active {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 800;
+}
+
+.focus-banner {
+  padding: 8px 16px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px dashed rgba(99, 102, 241, 0.35);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand);
+  text-align: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.focus-banner:hover {
+  background: rgba(99, 102, 241, 0.18);
+}
+
 .prompt {
   font-family: 'JetBrains Mono', monospace;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
   background: var(--surface);
   backdrop-filter: var(--blur);
   border-radius: 24px;
   padding: 32px;
-  font-size: 26px;
-  line-height: 1.8;
-  letter-spacing: 0.03em;
-  min-height: 200px;
+  font-size: 24px;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  min-height: 180px;
+  max-height: 420px;
+  overflow-y: auto;
   box-shadow: var(--shadow-lg);
-}
-.prompt .done { color: var(--success); }
-.prompt .current { 
-  background: rgba(99, 102, 241, 0.25); 
-  border-radius: 6px; 
   position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.prompt:focus-within, .prompt.focused {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), var(--shadow-lg);
+}
+
+.prompt .word {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.32em;
+}
+.prompt .paragraph-break {
+  display: block;
+  height: 20px;
+  margin: 10px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.prompt .done {
+  color: var(--success);
+  font-weight: 600;
+}
+.prompt .current {
+  background: rgba(99, 102, 241, 0.35);
+  color: #ffffff;
+  border-radius: 4px;
+  position: relative;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
 }
 .prompt .current::after {
   content: '';
@@ -464,8 +538,43 @@ button { cursor: pointer; border: none; outline: none; }
   animation: blink 1s step-end infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
-.prompt .bad { color: var(--danger); text-decoration: underline; text-decoration-thickness: 3px; background: rgba(244, 63, 94, 0.15); }
-.prompt .pending { color: var(--muted); }
+
+.prompt .bad {
+  color: var(--danger);
+  background: rgba(244, 63, 94, 0.22);
+  border-radius: 4px;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+.prompt .pending {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+body.light .prompt {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+body.light .prompt .done {
+  color: #059669;
+  font-weight: 600;
+}
+body.light .prompt .current {
+  background: rgba(99, 102, 241, 0.22);
+  color: #1e1b4b;
+  border-radius: 4px;
+  font-weight: 800;
+}
+body.light .prompt .bad {
+  color: #be123c;
+  background: rgba(244, 63, 94, 0.15);
+}
+body.light .prompt .pending {
+  color: #334155;
+  font-weight: 600;
+  opacity: 1;
+}
 
 #typingInput {
   position: absolute;
@@ -560,6 +669,198 @@ button { cursor: pointer; border: none; outline: none; }
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* Interactive QWERTY Heatmap */
+.heatmap-wrap {
+  margin: 16px 0 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px;
+}
+.heatmap-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.heatmap-key {
+  position: relative;
+  min-width: 48px;
+  height: 52px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.heatmap-key:hover {
+  transform: translateY(-4px) scale(1.06);
+  z-index: 10;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.heatmap-key b { font-size: 15px; font-weight: 800; }
+.heatmap-key small { font-size: 10px; opacity: 0.85; font-weight: 600; }
+
+.heatmap-key.excellent {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+.heatmap-key.good {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.35);
+  color: #a5b4fc;
+}
+.heatmap-key.warning {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fde047;
+}
+.heatmap-key.critical {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.55);
+  color: #fda4af;
+  animation: pulseWeak 2s infinite;
+}
+@keyframes pulseWeak {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+  50% { box-shadow: 0 0 14px 2px rgba(244, 63, 94, 0.3); }
+}
+.heatmap-key.untested {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--muted);
+}
+.heatmap-key.space-key { min-width: 240px; flex-direction: row; justify-content: center; }
+
+.heatmap-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 99px; }
+
+.heatmap-detail-card {
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: var(--surface-3);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Streaks & Badges */
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  font-weight: 800;
+  font-size: 13px;
+}
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.badge-card {
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.badge-icon {
+  font-size: 22px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+.badge-info b { display: block; font-size: 13px; margin-bottom: 2px; }
+.badge-info small { color: var(--muted); font-size: 11px; }
+
+/* Custom Badge / Tags */
+.custom-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(217, 70, 239, 0.15);
+  color: #e879f9;
+  border: 1px solid rgba(217, 70, 239, 0.3);
+  margin-left: 6px;
+}
+
+/* Modals */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(4, 7, 18, 0.75);
+  backdrop-filter: blur(12px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.modal-card {
+  width: min(650px, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
+}
+
+/* Audio indicator */
+.audio-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--muted);
+}
+.metronome-pulse.active {
+  animation: pulseMetronome 0.15s ease-out;
+}
+@keyframes pulseMetronome {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); color: var(--brand); }
+  100% { transform: scale(1); }
+}
+
 @media (max-width: 1100px) {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
@@ -570,3 +871,4 @@ button { cursor: pointer; border: none; outline: none; }
   .auth-wrap { grid-template-columns: 1fr; }
   .auth-left { display: none; }
 }
+

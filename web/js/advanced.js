@@ -138,6 +138,7 @@
         <div class="kf-actions">
           <button class="button button-primary" onclick="window.runDeepCoachFromLab()">Run deep coach</button>
           <button class="button button-ghost" onclick="window.openPerformanceSnapshot()">Refresh analytics</button>
+          <button class="button button-ghost" onclick="document.querySelector('.kf-modal-backdrop')?.remove();window.startAdaptiveDrill();">Launch Procedural Drill</button>
         </div>
       `;
       modal(html);

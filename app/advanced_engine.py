@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import math
+import random
 import sqlite3
 import statistics
 import time
@@ -211,6 +213,107 @@ class AdvancedTypingEngine:
             "latency_p95_ms": round(self._p95(all_latencies), 2) if all_latencies else 0,
         }
 
+    def get_heatmap_data(self, user_id: int) -> dict[str, Any]:
+        """
+        Returns full QWERTY heatmap analytics mapping all standard keys to performance ratings.
+        """
+        analysis = self.analyze(user_id)
+        self.persist_analysis(user_id, analysis)
+
+        with self.db.connect() as con:
+            rows = con.execute(
+                "SELECT key, attempts, errors, accuracy, avg_latency_ms, p95_latency_ms, finger, hand FROM advanced_key_stats WHERE user_id=?",
+                (user_id,),
+            ).fetchall()
+            error_rows = con.execute(
+                "SELECT expected_key, SUM(count) as mistakes FROM key_errors WHERE user_id=? GROUP BY expected_key",
+                (user_id,),
+            ).fetchall()
+
+        err_map = {r["expected_key"].lower(): r["mistakes"] for r in error_rows}
+        stats_map = {r["key"].lower(): dict(r) for r in rows}
+
+        all_keys = list("abcdefghijklmnopqrstuvwxyz1234567890`-=[];',./")
+        heatmap: dict[str, dict[str, Any]] = {}
+
+        for k in all_keys:
+            data = stats_map.get(k, None)
+            mistakes = err_map.get(k, 0)
+            if data:
+                acc = float(data["accuracy"])
+                lat = float(data["avg_latency_ms"])
+                att = int(data["attempts"])
+                if mistakes > 5 or acc < 85:
+                    status = "critical"
+                elif mistakes > 2 or acc < 92:
+                    status = "warning"
+                elif acc >= 96 and lat < 250:
+                    status = "excellent"
+                else:
+                    status = "good"
+                heatmap[k] = {
+                    "key": k,
+                    "status": status,
+                    "accuracy": acc,
+                    "avg_latency_ms": lat,
+                    "p95_latency_ms": float(data["p95_latency_ms"]),
+                    "mistakes": mistakes,
+                    "attempts": att,
+                    "finger": data["finger"],
+                }
+            else:
+                heatmap[k] = {
+                    "key": k,
+                    "status": "untested" if mistakes == 0 else "warning",
+                    "accuracy": 100.0 if mistakes == 0 else 70.0,
+                    "avg_latency_ms": 0.0,
+                    "p95_latency_ms": 0.0,
+                    "mistakes": mistakes,
+                    "attempts": 0,
+                    "finger": FINGER_MAP.get(k, "unknown"),
+                }
+
+        return {
+            "heatmap": heatmap,
+            "hand_balance": analysis["hand_balance"],
+            "rhythm_cv": analysis["rhythm_cv"],
+            "latency_avg_ms": analysis["latency_avg_ms"],
+        }
+
+    def generate_adaptive_drill(self, user_id: int) -> dict[str, Any]:
+        """
+        Procedurally generates a targeted drill text addressing the learner's top weaknesses.
+        """
+        analysis = self.analyze(user_id)
+        weak_keys = [x["key"] for x in analysis.get("key_insights", []) if x.get("accuracy", 100) < 95][:4]
+        slow_trans = [x["transition"] for x in analysis.get("slow_transitions", [])][:3]
+
+        tokens: list[str] = []
+        if weak_keys:
+            for k in weak_keys:
+                tokens.extend([f"{k}{k}", f"a{k}a", f"e{k}e", f"in{k}", f"{k}ing", f"re{k}", f"un{k}"])
+        if slow_trans:
+            for t in slow_trans:
+                parts = t.split("->")
+                if len(parts) == 2:
+                    p = parts[0] + parts[1]
+                    tokens.extend([p, f"{p}er", f"{p}ing", f"the{p}", f"{p}ly"])
+
+        if not tokens:
+            tokens = ["the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "focus", "steady", "rhythm"]
+
+        random.seed(int(time.time() * 1000) % 100000)
+        selected = random.choices(tokens, k=16)
+        drill_text = " ".join(selected)
+
+        return {
+            "title": "Adaptive Micro-Drill",
+            "description": f"Targeting {', '.join(weak_keys).upper() if weak_keys else 'smooth transitions'}.",
+            "focus_keys": "".join(weak_keys),
+            "content": drill_text,
+            "duration_minutes": 3,
+        }
+
     def persist_analysis(self, user_id: int, analysis: dict[str, Any]) -> None:
         now = datetime.now().isoformat(timespec="seconds")
         with self.db.connect() as con:
@@ -372,5 +475,5 @@ class AdvancedTypingEngine:
             "database_size_bytes": db_size,
             "table_counts": counts,
             "agent_runs": agent_runs,
-            "version": "0.4.0",
+            "version": "0.5.0",
         }

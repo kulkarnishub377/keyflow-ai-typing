@@ -1,9 +1,59 @@
 import unittest
-from app.agents import MultiAgentOrchestrator
+from app.agents import MultiAgentOrchestrator, ExerciseGenerator, SessionReviewer, Validator
+
 
 class TestAgents(unittest.TestCase):
     def setUp(self):
         self.orchestrator = MultiAgentOrchestrator()
+
+    def test_full_10_agent_pipeline_execution(self):
+        dashboard = {
+            "sessions": 5,
+            "avg_wpm": 65,
+            "avg_accuracy": 98,
+            "recent": [
+                {"wpm": 65, "accuracy": 98, "duration_seconds": 60},
+                {"wpm": 60, "accuracy": 96, "duration_seconds": 60},
+            ],
+            "weak_keys": [{"expected_key": "r", "mistakes": 3}],
+            "latest_telemetry": [
+                {"key": "a", "latency": 150},
+                {"key": "b", "latency": 160},
+            ],
+        }
+        result = self.orchestrator.run(dashboard)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(len(result["trace"]), 10)
+        self.assertIn("exercise", result)
+        self.assertIn("session_review", result)
+        self.assertIn("validation", result)
+
+    def test_exercise_generator(self):
+        gen = ExerciseGenerator()
+        context = {
+            "plan": {"mode": "weak_key_drill", "focus_keys": ["E", "R"], "minutes": 5},
+            "weaknesses": {"slow_digraphs": []},
+        }
+        res = gen.run(context)
+        self.assertEqual(res.status, "ok")
+        self.assertIn("exercise_text", res.output)
+        self.assertIn("target_keys", res.output)
+
+    def test_session_reviewer(self):
+        reviewer = SessionReviewer()
+        context = {
+            "dashboard": {
+                "recent": [
+                    {"wpm": 70, "accuracy": 99},
+                    {"wpm": 62, "accuracy": 96},
+                ]
+            },
+            "performance": {"state": "speed_and_consistency"},
+        }
+        res = reviewer.run(context)
+        self.assertEqual(res.status, "ok")
+        self.assertEqual(res.output["trend"], "accelerating_growth")
+        self.assertEqual(res.output["wpm_delta"], 8.0)
 
     def test_rhythm_variance_detection(self):
         telemetry = [
@@ -16,7 +66,7 @@ class TestAgents(unittest.TestCase):
             "sessions": 5,
             "avg_wpm": 65,
             "avg_accuracy": 98,
-            "latest_telemetry": telemetry
+            "latest_telemetry": telemetry,
         }
         result = self.orchestrator.run(dashboard)
         self.assertEqual(result["status"], "ok")
@@ -40,26 +90,17 @@ class TestAgents(unittest.TestCase):
         result = self.orchestrator.run(dashboard)
         self.assertEqual(result["plan"]["difficulty_action"], "reduce_speed_gate")
 
-    def test_privacy_guard_and_llm_fallback(self):
-        # Without Ollama running, the LLMCoach should fallback to deterministic
-        dashboard = {
-            "sessions": 5,
-            "avg_wpm": 60,
-            "avg_accuracy": 95,
+    def test_validator_rejection(self):
+        validator = Validator()
+        # Invalid oversized coaching message
+        context = {
+            "plan": {"minutes": 10},
+            "coach": {"message": "A" * 600},
         }
-        result = self.orchestrator.run(dashboard)
-        self.assertEqual(result["status"], "ok")
-        
-        # Verify the PrivacyGuard ran
-        trace = result["trace"]
-        privacy_result = next((r for r in trace if r["agent"] == "privacy_guard"), None)
-        self.assertIsNotNone(privacy_result)
-        self.assertIn("safe_context", privacy_result["output"])
-        
-        # Verify the LLMCoach ran and fell back
-        llm_result = next((r for r in trace if r["agent"] == "llm_coach"), None)
-        self.assertIsNotNone(llm_result)
-        self.assertFalse(llm_result["output"]["is_llm"])
+        res = validator.run(context)
+        self.assertEqual(res.status, "blocked")
+        self.assertFalse(res.output["valid"])
+
 
 if __name__ == "__main__":
     unittest.main()

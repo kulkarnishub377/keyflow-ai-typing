@@ -4,45 +4,322 @@ from .database import Database
 
 LESSONS = [
     # Level 1: Home Row Mastery
-    ("Home Row: Anchors", 1, "Learn the anchor keys F and J.", "ffff jjjj ff jj fj jf", "fj", 3, 1),
-    ("Home Row: Index Fingers", 1, "Expand to G and H while returning to anchors.", "fg hj gf jh fghg jhkj", "fghj", 4, 2),
-    ("Home Row: Left Hand", 1, "Build left hand control.", "asdf fdsa sad dad fasad", "asdfg", 5, 3),
-    ("Home Row: Right Hand", 1, "Build right hand control.", "jkl; ;lkj all fall hall", "hjkl;", 5, 4),
-    ("Home Row: Full Integration", 1, "Combine both hands smoothly without looking down.", "a glass falls half a flash a dash a gash", "asdfghjkl;", 6, 5),
-    
-    # Level 2: Top Row Reach
-    ("Top Row: Left Reaches", 2, "Reach for Q, W, E, R, T.", "water tree free draw read tear", "qwert", 5, 6),
-    ("Top Row: Right Reaches", 2, "Reach for Y, U, I, O, P.", "you pop out pot top your up rip", "yuiop", 5, 7),
-    ("Top Row: Integration", 2, "Mix top and home rows gracefully.", "the quick weight thought right height flight", "qwertyuiopasdfghjkl;", 6, 8),
-    
-    # Level 3: Bottom Row Descent
-    ("Bottom Row: Left Drops", 3, "Drop to Z, X, C, V, B.", "cab bad vac cab back brave", "zxcvb", 5, 9),
-    ("Bottom Row: Right Drops", 3, "Drop to N, M, ,, ., /.", "man name main plan zoom pan.", "nm,./", 5, 10),
-    ("Bottom Row: Integration", 3, "Mix all three rows.", "can mix box zoom cave brave maximum", "zxcvbnm", 6, 11),
-    
-    # Level 4: Rhythm & Digraphs
-    ("Common Digraphs: th, he", 4, "Practice the most common two-letter pairs.", "the them they then there these their", "th,he", 6, 12),
-    ("Common Digraphs: in, er", 4, "Master fast rolls on common pairs.", "in into inner her here error finger", "in,er", 6, 13),
-    ("Rhythm: Short Words", 4, "Type short words evenly without bursting.", "it is a to he do in we an or by as at be", "", 5, 14),
-    
-    # Level 5: Punctuation & Numbers
-    ("Shift & Capitalization", 5, "Use the opposite shift key.", "Apple Banana Cherry Date Egg Fig", "Shift", 5, 15),
-    ("Essential Punctuation", 5, "Commas, periods, quotes, and question marks.", "Wait, what? Yes, I said 'Hello'. Oh, really?", ",.?'", 6, 16),
-    ("Numbers Row", 5, "Reach up to the number row.", "1 2 3 4 5 6 7 8 9 0 2024 1999 42", "1234567890", 6, 17),
-    
-    # Level 6: Advanced Mastery & Coding
-    ("Code Syntax: Brackets", 6, "Programming basics: brackets and braces.", "function() { return [1, 2]; }", "()[]{}", 7, 18),
-    ("Code Syntax: Operators", 6, "Programming basics: logic operators.", "if (a === b && c !== d) x += 1;", "=+-*&|!", 7, 19),
-    ("Full Alphabet Pangrams", 6, "Type every letter of the alphabet in rhythm.", "The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs.", "abcdefghijklmnopqrstuvwxyz", 10, 20),
+    (
+        "Home Row: Anchors",
+        1,
+        "Learn the anchor keys F and J with index finger touch.",
+        "ffff jjjj ff jj fj jf\n\njf fj fff jjj ffff jjjj\n\nfjf jfj ffjj jjff fj fj",
+        "fj",
+        3,
+        1,
+    ),
+    (
+        "Home Row: Index Fingers",
+        1,
+        "Expand to G and H while returning to anchors.",
+        "fg hj gf jh fghg jhkj\n\ngf hj hg jh fgh jhk ghfj\n\nhgjf fjhg ghhg ffjj fghj",
+        "fghj",
+        4,
+        2,
+    ),
+    (
+        "Home Row: Left Hand",
+        1,
+        "Build left hand muscle memory on A, S, D, F.",
+        "asdf fdsa sad dad fasad\n\na fad a dad sad fall as alas\n\nsad dad fast flask glass salad",
+        "asdfg",
+        5,
+        3,
+    ),
+    (
+        "Home Row: Right Hand",
+        1,
+        "Build right hand muscle memory on J, K, L, ;.",
+        "jkl; ;lkj all fall hall\n\nask fall half flash dash gash\n\nall fall hall shall look hook",
+        "hjkl;",
+        5,
+        4,
+    ),
+    (
+        "Home Row: Full Integration",
+        1,
+        "Combine both hands smoothly without looking down.",
+        "a glass falls half a flash a dash a gash\n\nall lads ask dad as a salad falls flat\n\nhalf a flask falls as lads glad ask",
+        "asdfghjkl;",
+        6,
+        5,
+    ),
+    # Level 2: Top Row Reaches
+    (
+        "Top Row: Left Reaches",
+        2,
+        "Reach for Q, W, E, R, T with precision.",
+        "water tree free draw read tear\n\nred raw war wet saw treat weed raw\n\nwe draw water from a sweet tree",
+        "qwert",
+        5,
+        6,
+    ),
+    (
+        "Top Row: Right Reaches",
+        2,
+        "Reach for Y, U, I, O, P smoothly.",
+        "you pop out pot top your up rip\n\npoor plot tour port trip pout root\n\nyou put out your pot to pour tea",
+        "yuiop",
+        5,
+        7,
+    ),
+    (
+        "Top Row: Common Vowel Pairs",
+        2,
+        "Practice fluid rolls across EA, OU, IE, and OO.",
+        "great clear look house quiet round\n\nclean brain train sound voice choice\n\neach quiet thought brings deep peace",
+        "eaiou",
+        5,
+        8,
+    ),
+    (
+        "Top Row: Full Integration",
+        2,
+        "Mix top and home rows gracefully.",
+        "the quick weight thought right height flight\n\nwrite high words with quiet light power\n\nflight through white clouds at great speed",
+        "qwertyuiopasdfghjkl;",
+        6,
+        9,
+    ),
+    # Level 3: Bottom Row Drops
+    (
+        "Bottom Row: Left Drops",
+        3,
+        "Drop to Z, X, C, V, B with steady fingers.",
+        "cab bad vac cab back brave\n\ncave base crab black blade carve\n\nbrave cats climb back into the cave",
+        "zxcvb",
+        5,
+        10,
+    ),
+    (
+        "Bottom Row: Right Drops",
+        3,
+        "Drop to N, M, comma, period, and slash.",
+        "man name main plan zoom pan.\n\nmoon mind moon norm mend moon.\n\nmake many new plans in clean mind.",
+        "nm,./",
+        5,
+        11,
+    ),
+    (
+        "Bottom Row: Mixed Trajectories",
+        3,
+        "Transition across all three keyboard rows.",
+        "zenith calm zero mix box climb\n\nzone blaze maze frozen dynamic puzzle\n\nclimb above the maze to the highest peak",
+        "zxcvbnm",
+        5,
+        12,
+    ),
+    (
+        "Bottom Row: Full Integration",
+        3,
+        "Balance all three rows in harmonious cadence.",
+        "can mix box zoom cave brave maximum\n\nfive boxing wizards jump quickly over\n\npack my box with vibrant velvet gems",
+        "zxcvbnm",
+        6,
+        13,
+    ),
+    # Level 4: Rhythm, Digraphs & N-Grams
+    (
+        "Common Digraphs: th, he",
+        4,
+        "Practice the most frequent English two-letter pairs.",
+        "the them they then there these their\n\nthat think thank both with path earth\n\nthey thought that the path was clear",
+        "th,he",
+        6,
+        14,
+    ),
+    (
+        "Common Digraphs: in, er",
+        4,
+        "Master fast rolls on common pairs.",
+        "in into inner her here error finger\n\nwinner dinner center dinner silver dinner\n\nher inner drive brought her great power",
+        "in,er",
+        6,
+        15,
+    ),
+    (
+        "Common Digraphs: an, on, re",
+        4,
+        "Roll cleanly through common prefixes and roots.",
+        "plan only return real reason online want\n\nrandom standard canyon front monster common\n\nreal reason and clean plans conquer doubt",
+        "an,on,re",
+        6,
+        16,
+    ),
+    (
+        "Common Trigraphs: ion, ent, ing",
+        4,
+        "Type common suffixes with clean cadence.",
+        "action mention moment movement running jumping\n\nformation segment element shining singing\n\nsilent movement brings strong action",
+        "ion,ent,ing",
+        6,
+        17,
+    ),
+    (
+        "Rhythm: Short Words Cadence",
+        4,
+        "Type short words metronomically without bursting.",
+        "it is a to he do in we an or by as at be\n\nso up if no my me on go us am he we\n\nbe steady in all you do every single day",
+        "rhythm",
+        5,
+        18,
+    ),
+    # Level 5: Punctuation, Capitalization & Numbers
+    (
+        "Shift & Capitalization",
+        5,
+        "Use the opposite shift key for clean capitalization.",
+        "Apple Banana Cherry Date Egg Fig Grape\n\nLondon Paris Tokyo Rome New York Berlin\n\nPractice Clean Shift Habits Every Single Day",
+        "Shift",
+        5,
+        19,
+    ),
+    (
+        "Essential Punctuation",
+        5,
+        "Commas, periods, quotes, and question marks.",
+        "Wait, what? Yes, I said 'Hello'. Oh, really?\n\n\"Keep going,\" she smiled; \"accuracy is key!\"\n\nIs it hard? No, it's simple: focus and breathe.",
+        ",.?'",
+        6,
+        20,
+    ),
+    (
+        "Numbers Row: 1 to 5",
+        5,
+        "Reach left hand up to numbers 1, 2, 3, 4, 5.",
+        "1 2 3 4 5 12 34 51 432 153\n\n2025 1492 1776 1984 2001 5543\n\nOrder 142 items on line 35 of section 4.",
+        "12345",
+        5,
+        21,
+    ),
+    (
+        "Numbers Row: 6 to 0 & Symbols",
+        5,
+        "Reach right hand up to 6, 7, 8, 9, 0.",
+        "6 7 8 9 0 2026 1999 42 100 789\n\nItem #99 costs $45.50 (with 15% discount).\n\nKey: 890-456-123 @ localhost:8080/api/v1",
+        "67890",
+        6,
+        22,
+    ),
+    # Level 6: Real-World Programming & Code Syntax
+    (
+        "Python Syntax: Functions & Data",
+        6,
+        "Type clean Python functions and data structures.",
+        "def compute_wpm(chars: int, seconds: float) -> float:\n    words = chars / 5.0\n    minutes = max(0.1, seconds / 60.0)\n    return round(words / minutes, 2)\n\nresult = [x * 2 for x in range(10) if x % 2 == 0]",
+        "python",
+        7,
+        23,
+    ),
+    (
+        "JavaScript / TS: Async & Objects",
+        6,
+        "Async/await, arrows, and destructuring syntax.",
+        "const fetchAnalytics = async (userId) => {\n  const res = await api.get(`/stats/${userId}`);\n  const { wpm, accuracy, streak } = res.data;\n  return { wpm: Math.round(wpm), accuracy };\n};",
+        "javascript",
+        7,
+        24,
+    ),
+    (
+        "HTML & CSS: Elements & Flexbox",
+        6,
+        "Tags, classes, and responsive style properties.",
+        "<div class=\"card glass-panel\">\n  <h2 class=\"title\">KeyFlow Workspace</h2>\n  <p style=\"color: var(--muted); margin: 0;\">Train with intent.</p>\n</div>",
+        "html,css",
+        7,
+        25,
+    ),
+    (
+        "SQL Syntax: Queries & Joins",
+        6,
+        "Database queries, joins, and aggregates.",
+        "SELECT u.username, COUNT(s.id) AS total_sessions, MAX(s.wpm) AS best_wpm\nFROM users u\nJOIN sessions s ON s.user_id = u.id\nWHERE s.accuracy >= 95.0\nGROUP BY u.id;",
+        "sql",
+        7,
+        26,
+    ),
+    (
+        "Code Syntax: Brackets & Operators",
+        6,
+        "Programming basics: brackets, braces, and logic.",
+        "if (a === b && c !== d || (x + 1) >= y) {\n  matrix[i][j] = (value * 2) >> 1;\n  stack.push({ key: \"valid\", ok: true });\n}",
+        "()[]{}<>=&|",
+        7,
+        27,
+    ),
+    # Level 7: Speed Fluency & Literature Pangrams
+    (
+        "Full Alphabet Pangrams",
+        7,
+        "Type every letter of the alphabet in rhythm.",
+        "The quick brown fox jumps over the lazy dog.\n\nPack my box with five dozen liquor jugs.\n\nSphinx of black quartz, judge my vow.",
+        "abcdefghijklmnopqrstuvwxyz",
+        8,
+        28,
+    ),
+    (
+        "Famous Prose: St. Exupery",
+        7,
+        "Flow through inspiring classic prose.",
+        "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.\n\nIn anything at all, perfection is finally attained when there is no longer anything to take away.",
+        "prose",
+        8,
+        29,
+    ),
+    (
+        "Famous Prose: Marcus Aurelius",
+        7,
+        "Maintain rhythm through stoic reflections.",
+        "You have power over your mind - not outside events. Realize this, and you will find strength.\n\nDwell on the beauty of life. Watch the stars, and see yourself running with them.",
+        "prose",
+        8,
+        30,
+    ),
+    (
+        "High-Speed Sprints",
+        7,
+        "Push maximum cadence on frequent English prose.",
+        "Consistent practice turns conscious effort into effortless muscle memory.\n\nSpeed is not something you chase; it is the natural consequence of flawless technique and unwavering rhythm.",
+        "speed",
+        7,
+        31,
+    ),
+    (
+        "Zen Flow: High-Fluency Rhythm",
+        7,
+        "Relax your shoulders, breathe, and let fingers float.",
+        "Quiet minds build clean habits. Let each keystroke land like gentle rain upon still water.\n\nStay relaxed, breathe evenly, and trust the quiet coordination of your fingers.",
+        "zen",
+        8,
+        32,
+    ),
 ]
+
 
 def seed(db: Database) -> None:
     with db.connect() as con:
-        existing_titles = {r[0] for r in con.execute("SELECT title FROM lessons").fetchall()}
-        new_lessons = [l for l in LESSONS if l[0] not in existing_titles]
-        
-        if new_lessons:
-            con.executemany(
-                "INSERT INTO lessons(title,level,description,content,focus_keys,duration_minutes,sort_order) VALUES(?,?,?,?,?,?,?)",
-                new_lessons,
-            )
+        for l in LESSONS:
+            title, level, description, content, focus_keys, duration_minutes, sort_order = l
+            row = con.execute("SELECT id FROM lessons WHERE title=? AND is_custom=0", (title,)).fetchone()
+            if row:
+                con.execute(
+                    """
+                    UPDATE lessons
+                    SET level=?, description=?, content=?, focus_keys=?, duration_minutes=?, sort_order=?
+                    WHERE id=?
+                    """,
+                    (level, description, content, focus_keys, duration_minutes, sort_order, row["id"]),
+                )
+            else:
+                con.execute(
+                    """
+                    INSERT INTO lessons(title,level,description,content,focus_keys,duration_minutes,sort_order,is_custom)
+                    VALUES(?,?,?,?,?,?,?,0)
+                    """,
+                    l,
+                )

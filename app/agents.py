@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from .llm import LocalModelProvider
 
@@ -52,9 +53,20 @@ class PerformanceAnalyst(Agent):
             state = "fluency_building"
         else:
             state = "speed_and_consistency"
-        return AgentResult(self.name, "ok", 0.96, {"state": state, "sessions": sessions, "avg_wpm": avg_wpm, "avg_accuracy": acc, "avg_latency": avg_latency, "rhythm_variance": rhythm_variance}, [
-            f"sessions={sessions}", f"avg_latency={avg_latency:.1f}ms", f"variance={rhythm_variance:.0f}"
-        ])
+        return AgentResult(
+            self.name,
+            "ok",
+            0.96,
+            {
+                "state": state,
+                "sessions": sessions,
+                "avg_wpm": avg_wpm,
+                "avg_accuracy": acc,
+                "avg_latency": avg_latency,
+                "rhythm_variance": rhythm_variance,
+            },
+            [f"sessions={sessions}", f"avg_latency={avg_latency:.1f}ms", f"variance={rhythm_variance:.0f}"],
+        )
 
 
 class WeaknessDetector(Agent):
@@ -69,9 +81,13 @@ class WeaknessDetector(Agent):
         slow_digraphs: list[str] = []
         if telemetry:
             for i in range(1, len(telemetry)):
-                if 400 < telemetry[i]["latency"] < 2000:
-                    slow_digraphs.append(telemetry[i-1]["key"] + "->" + telemetry[i]["key"])
+                if 400 < telemetry[i].get("latency", 0) < 2000:
+                    prev_k = telemetry[i - 1].get("key", "")
+                    curr_k = telemetry[i].get("key", "")
+                    if prev_k and curr_k:
+                        slow_digraphs.append(f"{prev_k}->{curr_k}")
             from collections import Counter
+
             counts = Counter(slow_digraphs)
             slow_digraphs = [k for k, v in counts.most_common(3) if v > 2]
         if slow_digraphs:
@@ -86,9 +102,13 @@ class WeaknessDetector(Agent):
             recommendation = "Collect more sessions before making key-level conclusions."
             confidence = 0.74
             evidence = "insufficient key-error history"
-        return AgentResult(self.name, "ok", confidence, {"weak_keys": keys, "slow_digraphs": slow_digraphs, "recommendation": recommendation}, [
-            evidence
-        ])
+        return AgentResult(
+            self.name,
+            "ok",
+            confidence,
+            {"weak_keys": keys, "slow_digraphs": slow_digraphs, "recommendation": recommendation},
+            [evidence],
+        )
 
 
 class CurriculumPlanner(Agent):
@@ -112,9 +132,58 @@ class CurriculumPlanner(Agent):
         else:
             mode = "timed_fluency"
             minutes = 10
-        return AgentResult(self.name, "ok", 0.89, {"mode": mode, "minutes": minutes, "focus_keys": keys[:3]}, [
-            f"learner_state={state}", f"focus_keys={','.join(keys[:3]) or 'none'}"
-        ])
+        return AgentResult(
+            self.name,
+            "ok",
+            0.89,
+            {"mode": mode, "minutes": minutes, "focus_keys": keys[:3]},
+            [f"learner_state={state}", f"focus_keys={','.join(keys[:3]) or 'none'}"],
+        )
+
+
+class ExerciseGenerator(Agent):
+    name = "exercise_generator"
+    required_inputs = ("plan", "weaknesses")
+
+    def run(self, context: dict[str, Any]) -> AgentResult:
+        plan = context["plan"]
+        weak = context["weaknesses"]
+        mode = plan.get("mode", "timed_fluency")
+        focus_keys = plan.get("focus_keys", [])
+        slow_digraphs = weak.get("slow_digraphs", [])
+
+        # Procedural targeted drill generation
+        drill_words = []
+        if focus_keys:
+            for k in focus_keys:
+                kl = k.lower()
+                patterns = [f"{kl}{kl}", f"a{kl}a", f"e{kl}e", f"in{kl}", f"{kl}ing", f"{kl}or", f"un{kl}"]
+                drill_words.extend(patterns)
+        elif slow_digraphs:
+            for d in slow_digraphs:
+                parts = d.split("->")
+                if len(parts) == 2:
+                    p = parts[0] + parts[1]
+                    drill_words.extend([f"{p}", f"the{p}", f"{p}ing", f"{p}er", f"re{p}"])
+        else:
+            drill_words = ["the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "focus", "rhythm"]
+
+        random.seed(42)  # Deterministic seed for reproducible drill outputs
+        selected = (drill_words * 4)[:12]
+        generated_text = " ".join(selected)
+
+        return AgentResult(
+            self.name,
+            "ok",
+            0.94,
+            {
+                "exercise_text": generated_text,
+                "target_keys": focus_keys,
+                "word_count": len(selected),
+                "mode": mode,
+            },
+            [f"generated_words={len(selected)}", f"target_keys={','.join(focus_keys) or 'general'}"],
+        )
 
 
 class DifficultyController(Agent):
@@ -139,9 +208,59 @@ class DifficultyController(Agent):
             target = 95
         context["plan"]["target_accuracy"] = target
         context["plan"]["difficulty_action"] = action
-        return AgentResult(self.name, "ok", 0.95, {"action": action, "target_acc": target}, [
-            f"acc={acc:.1f}%", f"action={action}"
-        ])
+        return AgentResult(
+            self.name,
+            "ok",
+            0.95,
+            {"action": action, "target_acc": target},
+            [f"acc={acc:.1f}%", f"action={action}"],
+        )
+
+
+class SessionReviewer(Agent):
+    name = "session_reviewer"
+    required_inputs = ("dashboard", "performance")
+
+    def run(self, context: dict[str, Any]) -> AgentResult:
+        d = context["dashboard"]
+        recent = d.get("recent", [])
+        if len(recent) < 2:
+            trend = "insufficient_history"
+            wpm_delta = 0.0
+            acc_delta = 0.0
+            confidence = 0.70
+            notable = "Complete more sessions to establish a historical baseline."
+        else:
+            latest = recent[0]
+            prior = recent[1]
+            wpm_delta = round(float(latest.get("wpm", 0)) - float(prior.get("wpm", 0)), 1)
+            acc_delta = round(float(latest.get("accuracy", 0)) - float(prior.get("accuracy", 0)), 1)
+            if acc_delta >= 1.0 and wpm_delta >= 1.0:
+                trend = "accelerating_growth"
+                notable = f"Positive momentum: +{wpm_delta} WPM, +{acc_delta}% accuracy."
+            elif acc_delta < -2.0:
+                trend = "accuracy_regression"
+                notable = f"Accuracy dropped by {abs(acc_delta)}%. Slow down to maintain precision."
+            elif wpm_delta >= 2.0:
+                trend = "speed_increase"
+                notable = f"Speed gained +{wpm_delta} WPM."
+            else:
+                trend = "stable_consistency"
+                notable = "Performance is stable across recent sessions."
+            confidence = 0.91
+
+        return AgentResult(
+            self.name,
+            "ok",
+            confidence,
+            {
+                "trend": trend,
+                "wpm_delta": wpm_delta,
+                "acc_delta": acc_delta,
+                "notable_change": notable,
+            },
+            [f"trend={trend}", f"delta_wpm={wpm_delta}", f"delta_acc={acc_delta}"],
+        )
 
 
 class Coach(Agent):
@@ -153,18 +272,30 @@ class Coach(Agent):
         w = context["weaknesses"]
         plan = context["plan"]
         if p.get("state") == "erratic_rhythm":
-            message = "Your typing rhythm is highly erratic. Stop rushing easy words. Focus on a steady, metronomic pace to build true fluency."
+            message = (
+                "Your typing rhythm is highly erratic. Stop rushing easy words. "
+                "Focus on a steady, metronomic pace to build true fluency."
+            )
         elif p.get("state") == "mechanical_latency" and w.get("slow_digraphs"):
-            message = f"Your fingers are hesitating on certain transitions. Focus on rolling smoothly through {', '.join(w['slow_digraphs'])}."
+            message = (
+                f"Your fingers are hesitating on certain transitions. "
+                f"Focus on rolling smoothly through {', '.join(w['slow_digraphs'])}."
+            )
         elif p["state"] == "new_learner":
             message = "Start with clean home-row habits. Keep the hands relaxed and let accuracy lead speed."
         elif p["state"] == "accuracy_first":
-            message = "Your next gain should come from cleaner repetitions. Slow down until mistakes become rare, then build speed again."
+            message = (
+                "Your next gain should come from cleaner repetitions. "
+                "Slow down until mistakes become rare, then build speed again."
+            )
         elif w.get("weak_keys"):
-            message = f"Focus your next session on {', '.join(w['weak_keys'][:3])}. Short targeted drills will give you better gains than another random test."
+            message = (
+                f"Focus your next session on {', '.join(w['weak_keys'][:3])}. "
+                "Short targeted drills will give you better gains than another random test."
+            )
         else:
             message = "Your fundamentals are holding. Use timed sessions to raise pace while protecting accuracy and rhythm."
-        
+
         diff = context["plan"].get("difficulty_action", "baseline")
         if diff == "reduce_speed_gate":
             message += " Difficulty adjusted: Lowering speed targets to prioritize precision."
@@ -184,7 +315,7 @@ class PrivacyGuard(Agent):
         w = context["weaknesses"]
         plan = context["plan"]
         coach = context["coach"]
-        
+
         safe_context = {
             "state": p.get("state"),
             "wpm": p.get("avg_wpm"),
@@ -193,7 +324,7 @@ class PrivacyGuard(Agent):
             "slow_digraphs": w.get("slow_digraphs", []),
             "plan_mode": plan.get("mode"),
             "plan_minutes": plan.get("minutes"),
-            "deterministic_advice": coach.get("message")
+            "deterministic_advice": coach.get("message"),
         }
         return AgentResult(self.name, "ok", 1.0, {"safe_context": safe_context}, ["PII stripped"])
 
@@ -204,22 +335,33 @@ class LLMCoach(Agent):
 
     def run(self, context: dict[str, Any]) -> AgentResult:
         safe_ctx = context["privacy_guard"]["safe_context"]
-        
+
         system_prompt = (
             "You are an expert typing coach. You receive a learner's metrics and a deterministic piece of advice. "
             "Rewrite the advice into a concise, encouraging, and highly actionable 2-sentence coaching tip. "
             "Do NOT invent new metrics or ignore the deterministic advice. Just make it sound natural and expert. "
             "Respond ONLY with the coaching text."
         )
-        prompt = f"Learner state: {safe_ctx['state']}\nMetrics: {safe_ctx['wpm']} WPM, {safe_ctx['accuracy']}% Acc\nDeterministic Advice: {safe_ctx['deterministic_advice']}\n\nProvide the 2-sentence coach message:"
-        
+        prompt = (
+            f"Learner state: {safe_ctx['state']}\n"
+            f"Metrics: {safe_ctx['wpm']} WPM, {safe_ctx['accuracy']}% Acc\n"
+            f"Deterministic Advice: {safe_ctx['deterministic_advice']}\n\n"
+            "Provide the 2-sentence coach message:"
+        )
+
         llm = LocalModelProvider()
         response = llm.generate(prompt, system=system_prompt)
-        
+
         if response:
             return AgentResult(self.name, "ok", 0.85, {"message": response, "is_llm": True}, ["local llm generation"])
         else:
-            return AgentResult(self.name, "skipped", 1.0, {"message": safe_ctx["deterministic_advice"], "is_llm": False}, ["llm offline, fallback deterministic"])
+            return AgentResult(
+                self.name,
+                "skipped",
+                1.0,
+                {"message": safe_ctx["deterministic_advice"], "is_llm": False},
+                ["llm offline, fallback deterministic"],
+            )
 
 
 class Validator(Agent):
@@ -235,22 +377,33 @@ class Validator(Agent):
         if len(coach) > 500:
             problems.append("coach message too long")
         ok = not problems
-        return AgentResult(self.name, "ok" if ok else "blocked", 0.99 if ok else 0.15, {"valid": ok, "problems": problems}, ["plan bounds", "message bounds"])
+        return AgentResult(
+            self.name,
+            "ok" if ok else "blocked",
+            0.99 if ok else 0.15,
+            {"valid": ok, "problems": problems},
+            ["plan bounds", "message bounds"],
+        )
 
 
 class MultiAgentOrchestrator:
-    """Deterministic local agent pipeline. Optional LLM adapters can consume its structured context later."""
+    """
+    Deterministic local multi-agent pipeline following Stage 4 production orchestration.
+    Maintains 10 explicit roles with strict contracts, structured traces, and fail-closed safety.
+    """
 
     def __init__(self) -> None:
         self.agents: list[Agent] = [
-            PerformanceAnalyst(), 
-            WeaknessDetector(), 
-            CurriculumPlanner(), 
-            DifficultyController(), 
-            Coach(), 
+            PerformanceAnalyst(),
+            WeaknessDetector(),
+            CurriculumPlanner(),
+            ExerciseGenerator(),
+            DifficultyController(),
+            SessionReviewer(),
+            Coach(),
             PrivacyGuard(),
             LLMCoach(),
-            Validator()
+            Validator(),
         ]
 
     def run(self, dashboard: dict[str, Any]) -> dict[str, Any]:
@@ -259,7 +412,7 @@ class MultiAgentOrchestrator:
         for agent in self.agents:
             result = agent.run(context)
             results.append(result)
-            if result.status != "ok":
+            if result.status != "ok" and result.status != "skipped":
                 return {"status": "blocked", "results": [r.__dict__ for r in results]}
             if agent.name == "performance_analyst":
                 context["performance"] = result.output
@@ -267,15 +420,19 @@ class MultiAgentOrchestrator:
                 context["weaknesses"] = result.output
             elif agent.name == "curriculum_planner":
                 context["plan"] = result.output
+            elif agent.name == "exercise_generator":
+                context["exercise"] = result.output
             elif agent.name == "difficulty_controller":
                 context["difficulty"] = result.output
+            elif agent.name == "session_reviewer":
+                context["session_review"] = result.output
             elif agent.name == "coach":
                 context["coach"] = result.output
             elif agent.name == "privacy_guard":
                 context["privacy_guard"] = result.output
             elif agent.name == "llm_coach":
                 context["llm_coach"] = result.output
-                if result.status == "ok":
+                if result.status == "ok" and result.output.get("is_llm"):
                     context["coach"]["message"] = result.output["message"]
                     context["coach"]["is_llm"] = True
             elif agent.name == "validator":
@@ -286,6 +443,8 @@ class MultiAgentOrchestrator:
             "plan": context["plan"],
             "performance": context["performance"],
             "weaknesses": context["weaknesses"],
+            "exercise": context.get("exercise", {}),
+            "session_review": context.get("session_review", {}),
             "validation": context["validation"],
             "trace": [r.__dict__ for r in results],
         }

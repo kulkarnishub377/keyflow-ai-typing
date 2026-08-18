@@ -6,9 +6,9 @@ from typing import Any
 
 import webview
 
-from .database import Database
-from .agents import MultiAgentOrchestrator
 from .advanced_engine import AdvancedTypingEngine
+from .agents import MultiAgentOrchestrator
+from .database import Database
 
 
 class API:
@@ -45,18 +45,45 @@ class API:
         uid = self.user["id"]
         return {
             "user": self.user,
-            "lessons": self.db.lessons(),
+            "lessons": self.db.lessons(uid),
             "progress": self.db.progress(uid),
             "dashboard": self.db.dashboard(uid),
             "settings": self.db.settings(uid),
+            "streak_stats": self.db.get_streak_and_stats(uid),
         }
 
     def save_session(self, payload: dict[str, Any]) -> dict[str, Any]:
-        result = self.db.save_session(self._require_user(), payload)
-        return {**result, "dashboard": self.db.dashboard(self.user["id"])}
+        uid = self._require_user()
+        result = self.db.save_session(uid, payload)
+        return {
+            **result,
+            "dashboard": self.db.dashboard(uid),
+            "streak_stats": self.db.get_streak_and_stats(uid),
+        }
 
     def dashboard(self) -> dict[str, Any]:
         return self.db.dashboard(self._require_user())
+
+    def get_streak_and_stats(self) -> dict[str, Any]:
+        return self.db.get_streak_and_stats(self._require_user())
+
+    def get_key_heatmap(self) -> dict[str, Any]:
+        """Returns per-key accuracy and latency heatmap metrics for visual rendering."""
+        return self.advanced.get_heatmap_data(self._require_user())
+
+    def generate_adaptive_drill(self) -> dict[str, Any]:
+        """Procedurally synthesizes a targeted drill targeting current weaknesses."""
+        return self.advanced.generate_adaptive_drill(self._require_user())
+
+    def create_custom_lesson(
+        self, title: str, content: str, focus_keys: str = "", duration_minutes: int = 5
+    ) -> dict[str, Any]:
+        uid = self._require_user()
+        return self.db.create_custom_lesson(uid, title, content, focus_keys, duration_minutes)
+
+    def delete_custom_lesson(self, lesson_id: int) -> bool:
+        uid = self._require_user()
+        return self.db.delete_custom_lesson(uid, int(lesson_id))
 
     def ai_coach(self) -> dict[str, Any]:
         """Run the local deterministic + optional local LLM coaching pipeline."""
@@ -97,16 +124,19 @@ class API:
         data = self.db.backup(self._require_user())
         out = Path(path).expanduser()
         from .backup import SecureBackupEngine
+
         engine = SecureBackupEngine()
         engine.encrypt_backup(data, out)
         return {"path": str(out)}
 
     def choose_backup_path(self) -> dict[str, Any]:
+        if not webview.windows:
+            return {"path": None}
         result = webview.windows[0].create_file_dialog(
             webview.SAVE_DIALOG,
             directory=str(Path.home()),
             save_filename="keyflow-backup.json",
-            file_types=("JSON files (*.json)", "All files (*.*)")
+            file_types=("JSON files (*.json)", "All files (*.*)"),
         )
         if not result:
             return {"path": None}

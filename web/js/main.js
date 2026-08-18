@@ -29,6 +29,15 @@ window.saveSettings = saveSettings;
 window.backup = backup;
 window.toggleTheme = toggleTheme;
 window.logout = logout;
+window.openCustomLessonModal = openCustomLessonModal;
+window.submitCustomLesson = submitCustomLesson;
+window.deleteCustomLesson = deleteCustomLesson;
+window.inspectHeatmapKey = inspectHeatmapKey;
+window.startAdaptiveDrill = startAdaptiveDrill;
+window.testAudioFeedback = testAudioFeedback;
+window.selectParagraph = selectParagraph;
+window.shuffleParagraph = shuffleParagraph;
+window.focusTypingInput = focusTypingInput;
 
 // Initialization
 window.addEventListener('pywebviewready', boot);
@@ -45,6 +54,7 @@ async function boot() {
             state.progress = b.progress || [];
             state.dashboard = b.dashboard;
             state.settings = b.settings || state.settings;
+            state.streak_stats = b.streak_stats || null;
         }
         applyTheme();
         render();
