@@ -46,13 +46,20 @@ class CoreTests(unittest.TestCase):
             seed(db)
             user = db.register("daily_user", "example-pass", "Daily User")
 
-            # Update settings with audio feedback & metronome
+            # Update settings with audio feedback & metronome & block_backspace
             settings = db.update_settings(
                 user["id"],
-                {"theme": "light", "daily_goal_minutes": 20, "sound_enabled": "click", "metronome_bpm": 80},
+                {
+                    "theme": "light",
+                    "daily_goal_minutes": 20,
+                    "sound_enabled": "click",
+                    "metronome_bpm": 80,
+                    "block_backspace": 1,
+                },
             )
             self.assertEqual(settings["sound_enabled"], "click")
             self.assertEqual(settings["metronome_bpm"], 80)
+            self.assertEqual(settings["block_backspace"], 1)
 
             # Save session to trigger streak
             db.save_session(

@@ -41,6 +41,7 @@ class Database:
                     daily_goal_minutes INTEGER NOT NULL DEFAULT 15,
                     sound_enabled TEXT NOT NULL DEFAULT 'off',
                     metronome_bpm INTEGER NOT NULL DEFAULT 0,
+                    block_backspace INTEGER NOT NULL DEFAULT 0,
                     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
 
@@ -109,6 +110,7 @@ class Database:
                 "ALTER TABLE lessons ADD COLUMN created_by INTEGER",
                 "ALTER TABLE settings ADD COLUMN sound_enabled TEXT NOT NULL DEFAULT 'off'",
                 "ALTER TABLE settings ADD COLUMN metronome_bpm INTEGER NOT NULL DEFAULT 0",
+                "ALTER TABLE settings ADD COLUMN block_backspace INTEGER NOT NULL DEFAULT 0",
             ]
             for stmt in migrations:
                 try:
@@ -374,13 +376,19 @@ class Database:
     def settings(self, user_id: int) -> dict[str, Any]:
         with self.connect() as con:
             row = con.execute(
-                "SELECT theme,daily_goal_minutes,sound_enabled,metronome_bpm FROM settings WHERE user_id=?",
+                "SELECT theme,daily_goal_minutes,sound_enabled,metronome_bpm,block_backspace FROM settings WHERE user_id=?",
                 (user_id,),
             ).fetchone()
         return (
             dict(row)
             if row
-            else {"theme": "dark", "daily_goal_minutes": 15, "sound_enabled": "off", "metronome_bpm": 0}
+            else {
+                "theme": "dark",
+                "daily_goal_minutes": 15,
+                "sound_enabled": "off",
+                "metronome_bpm": 0,
+                "block_backspace": 0,
+            }
         )
 
     def update_settings(self, user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
@@ -388,20 +396,28 @@ class Database:
         goal = max(1, min(240, int(payload.get("daily_goal_minutes", 15))))
         sound = str(payload.get("sound_enabled", "off"))
         metronome = max(0, min(240, int(payload.get("metronome_bpm", 0))))
+        block_backspace = 1 if payload.get("block_backspace") in (True, 1, "1", "true") else 0
         with self.connect() as con:
             con.execute(
                 """
-                INSERT INTO settings(user_id,theme,daily_goal_minutes,sound_enabled,metronome_bpm)
-                VALUES(?,?,?,?,?)
+                INSERT INTO settings(user_id,theme,daily_goal_minutes,sound_enabled,metronome_bpm,block_backspace)
+                VALUES(?,?,?,?,?,?)
                 ON CONFLICT(user_id) DO UPDATE SET
                   theme=excluded.theme,
                   daily_goal_minutes=excluded.daily_goal_minutes,
                   sound_enabled=excluded.sound_enabled,
-                  metronome_bpm=excluded.metronome_bpm
+                  metronome_bpm=excluded.metronome_bpm,
+                  block_backspace=excluded.block_backspace
                 """,
-                (user_id, theme, goal, sound, metronome),
+                (user_id, theme, goal, sound, metronome, block_backspace),
             )
-        return {"theme": theme, "daily_goal_minutes": goal, "sound_enabled": sound, "metronome_bpm": metronome}
+        return {
+            "theme": theme,
+            "daily_goal_minutes": goal,
+            "sound_enabled": sound,
+            "metronome_bpm": metronome,
+            "block_backspace": block_backspace,
+        }
 
     def backup(self, user_id: int) -> dict[str, Any]:
         with self.connect() as con:

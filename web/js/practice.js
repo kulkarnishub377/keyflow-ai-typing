@@ -68,6 +68,7 @@ function renderPractice() {
                         ${isCustom ? '<span class="custom-badge">CUSTOM</span>' : ''}
                         ${bpm > 0 ? `<span class="audio-status-pill"><span id="metronomePulse" class="metronome-pulse">●</span> ${bpm} BPM</span>` : ''}
                         ${soundMode !== 'off' ? `<span class="audio-status-pill">🔊 ${soundMode}</span>` : ''}
+                        ${Boolean(state.settings?.block_backspace) ? '<span class="audio-status-pill" style="color:#fbbf24;border-color:rgba(251,191,36,0.35)">🔒 No Backspace</span>' : ''}
                     </div>
                     <h1>${esc(l.title)}</h1>
                     <div class="subtitle">${esc(l.description || 'Focus on clean finger movements and smooth rhythm.')}</div>
@@ -264,12 +265,15 @@ function setupTyping() {
             setTimeout(() => keycap.classList.remove('active'), 150);
         }
 
-        // Web Audio Feedback
-        if (e.key.length === 1 || e.code === 'Space' || e.code === 'Enter' || e.key === 'Backspace') {
-            playKeySound('click');
+        if (e.key === 'Backspace') {
+            if (Boolean(state.settings?.block_backspace)) {
+                e.preventDefault();
+                playKeySound('beep');
+                toast('🔒 Backspace is blocked in Strict Accuracy Mode!');
+                return;
+            }
+            state.practice.backspaces++;
         }
-
-        if (e.key === 'Backspace') state.practice.backspaces++;
         if ((e.key.length === 1 || e.key === 'Enter') && !e.ctrlKey && !e.altKey && !e.metaKey) {
             const now = performance.now();
             state.practice.timing.push({

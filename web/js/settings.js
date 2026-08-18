@@ -2,13 +2,14 @@ function renderSettings() {
     const isDark = state.settings.theme === 'dark';
     const sound = state.settings.sound_enabled || 'off';
     const metronome = Number(state.settings.metronome_bpm || 0);
+    const blockBackspace = Boolean(state.settings.block_backspace);
 
     const content = `
         <section class="card" style="max-width:800px">
             <div class="section-head">
                 <div>
                     <h2>Workspace & Audio Settings</h2>
-                    <p>Comfort, practice pacing, audio feedback, and local data controls.</p>
+                    <p>Comfort, practice pacing, audio feedback, strict modes, and local data controls.</p>
                 </div>
             </div>
             <div class="form-grid">
@@ -41,6 +42,14 @@ function renderSettings() {
                         <option value="120" ${metronome === 120 ? 'selected' : ''}>120 BPM (High Cadence)</option>
                     </select>
                 </div>
+                <div class="field" style="grid-column: 1 / -1">
+                    <label>Backspace Restriction (Strict Accuracy Mode)</label>
+                    <select id="blockBackspace">
+                        <option value="0" ${!blockBackspace ? 'selected' : ''}>Allow Backspace (Standard — corrections permitted)</option>
+                        <option value="1" ${blockBackspace ? 'selected' : ''}>🔒 Block Backspace (Strict Accuracy Mode — prevents correcting mistakes)</option>
+                    </select>
+                    <small style="color:var(--muted);font-size:11px;margin-top:4px">When blocked, pressing Backspace will be disabled during practice to build decisive forward momentum.</small>
+                </div>
             </div>
             <div style="display:flex;gap:12px;margin-top:16px">
                 <button class="button button-primary" onclick="saveSettings()">Save settings</button>
@@ -70,6 +79,7 @@ function renderSettings() {
                 <span class="pill">Zero Telemetry Leakage</span>
                 <span class="pill">Scrypt & Fernet Crypto</span>
                 <span class="pill">10-Agent Deterministic Core</span>
+                <span class="pill">Strict Backspace Gate</span>
                 <span class="pill">Web Audio API</span>
             </div>
         </section>
@@ -82,7 +92,8 @@ async function saveSettings() {
         theme: document.getElementById('theme').value,
         daily_goal_minutes: Number(document.getElementById('goal').value),
         sound_enabled: document.getElementById('soundEnabled').value,
-        metronome_bpm: Number(document.getElementById('metronomeBpm').value)
+        metronome_bpm: Number(document.getElementById('metronomeBpm').value),
+        block_backspace: Number(document.getElementById('blockBackspace').value)
     });
     applyTheme();
     render();
