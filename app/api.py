@@ -9,6 +9,7 @@ import webview
 from .advanced_engine import AdvancedTypingEngine
 from .agents import MultiAgentOrchestrator
 from .database import Database
+from .security import SecurityValidator
 
 
 class API:
@@ -25,11 +26,16 @@ class API:
         return int(self.user["id"])
 
     def register(self, username: str, password: str, display_name: str = "") -> dict[str, Any]:
-        self.user = self.db.register(username, password, display_name)
+        clean_user = SecurityValidator.validate_username(username)
+        clean_pass = SecurityValidator.validate_password(password)
+        clean_dn = SecurityValidator.validate_display_name(display_name, fallback=clean_user)
+        self.user = self.db.register(clean_user, clean_pass, clean_dn)
         return self.user
 
     def login(self, username: str, password: str) -> dict[str, Any]:
-        self.user = self.db.login(username, password)
+        clean_user = SecurityValidator.validate_username(username)
+        clean_pass = SecurityValidator.validate_password(password)
+        self.user = self.db.login(clean_user, clean_pass)
         return self.user
 
     def logout(self) -> bool:
@@ -54,7 +60,8 @@ class API:
 
     def save_session(self, payload: dict[str, Any]) -> dict[str, Any]:
         uid = self._require_user()
-        result = self.db.save_session(uid, payload)
+        clean_payload = SecurityValidator.validate_session_payload(payload)
+        result = self.db.save_session(uid, clean_payload)
         return {
             **result,
             "dashboard": self.db.dashboard(uid),
@@ -79,7 +86,10 @@ class API:
         self, title: str, content: str, focus_keys: str = "", duration_minutes: int = 5
     ) -> dict[str, Any]:
         uid = self._require_user()
-        return self.db.create_custom_lesson(uid, title, content, focus_keys, duration_minutes)
+        clean_title, clean_content, clean_focus, clean_dur = SecurityValidator.validate_custom_lesson(
+            title, content, focus_keys, duration_minutes
+        )
+        return self.db.create_custom_lesson(uid, clean_title, clean_content, clean_focus, clean_dur)
 
     def delete_custom_lesson(self, lesson_id: int) -> bool:
         uid = self._require_user()
@@ -121,13 +131,13 @@ class API:
         return self.db.update_settings(self._require_user(), payload)
 
     def export_backup(self, path: str) -> dict[str, Any]:
+        out_path = SecurityValidator.validate_export_path(path)
         data = self.db.backup(self._require_user())
-        out = Path(path).expanduser()
         from .backup import SecureBackupEngine
 
         engine = SecureBackupEngine()
-        engine.encrypt_backup(data, out)
-        return {"path": str(out)}
+        engine.encrypt_backup(data, out_path)
+        return {"path": str(out_path)}
 
     def choose_backup_path(self) -> dict[str, Any]:
         if not webview.windows:
