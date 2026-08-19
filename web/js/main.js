@@ -58,6 +58,9 @@ window.openCommandPalette = typeof openCommandPalette === 'function' ? openComma
 window.closeCommandPalette = typeof closeCommandPalette === 'function' ? closeCommandPalette : () => {};
 window.openExitModal = typeof openExitModal === 'function' ? openExitModal : () => {};
 window.closeExitModal = typeof closeExitModal === 'function' ? closeExitModal : () => {};
+window.openLogoutModal = typeof openLogoutModal === 'function' ? openLogoutModal : () => {};
+window.closeLogoutModal = typeof closeLogoutModal === 'function' ? closeLogoutModal : () => {};
+window.confirmLogout = typeof confirmLogout === 'function' ? confirmLogout : () => {};
 window.handleCommandSearch = typeof handleCommandSearch === 'function' ? handleCommandSearch : () => {};
 window.executeCommand = typeof executeCommand === 'function' ? executeCommand : () => {};
 
