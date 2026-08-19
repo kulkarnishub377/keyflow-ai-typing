@@ -88,6 +88,22 @@ function renderSettings() {
             <div class="kf-card">
                 <div class="kf-card-header">
                     <div>
+                        <div class="kf-card-title">Session & Application Lifecycle</div>
+                        <div class="kf-card-subtitle">Manage active profile session and desktop application exit</div>
+                    </div>
+                </div>
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+                    All telemetry, custom lessons, and progress are securely persisted in local SQLite. You will always be asked for confirmation before signing out or exiting.
+                </p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="btn btn-secondary" onclick="openLogoutModal()">⎋ Sign Out of Profile...</button>
+                    <button class="btn btn-secondary" style="color:var(--accent-rose)" onclick="openExitModal()">✕ Exit KeyFlow Studio...</button>
+                </div>
+            </div>
+
+            <div class="kf-card">
+                <div class="kf-card-header">
+                    <div>
                         <div class="kf-card-title">Local Architectural Guarantees</div>
                         <div class="kf-card-subtitle">System architecture and offline zero-leakage security model</div>
                     </div>
