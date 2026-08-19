@@ -117,3 +117,155 @@ function stopMetronome() {
         metronomeTimer = null;
     }
 }
+
+// ==========================================================================
+// Arcade Cyber-Matrix DSP Sound Synthesizer
+// ==========================================================================
+function playLaserSound(pitchFactor = 1.0) {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        const startFreq = 1400 * pitchFactor;
+        const endFreq = 260 * pitchFactor;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(startFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.07);
+
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+        osc.start(now);
+        osc.stop(now + 0.07);
+    } catch (e) {}
+}
+
+function playExplosionSound() {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        // Sub-bass thump
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(28, now + 0.22);
+
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+        osc.start(now);
+        osc.stop(now + 0.22);
+    } catch (e) {}
+}
+
+function playComboChime(comboLevel = 1) {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const baseFrequencies = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+        const freq = baseFrequencies[Math.min(baseFrequencies.length - 1, comboLevel)];
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+        osc.start(now);
+        osc.stop(now + 0.18);
+    } catch (e) {}
+}
+
+function playShieldDamageSound() {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(190, now);
+        osc.frequency.exponentialRampToValueAtTime(75, now + 0.15);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } catch (e) {}
+}
+
+function playEmpSound() {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.4);
+
+        gain.gain.setValueAtTime(0.28, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+        osc.start(now);
+        osc.stop(now + 0.4);
+    } catch (e) {}
+}
+
+function playWaveVictorySound() {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        [440, 554.37, 659.25, 880].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            const now = ctx.currentTime + i * 0.08;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+        });
+    } catch (e) {}
+}
+
