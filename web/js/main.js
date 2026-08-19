@@ -9,14 +9,19 @@ function render() {
         return;
     }
     if (state.route === 'dashboard') renderDashboard();
-    else if (state.route === 'learn') renderLearn();
     else if (state.route === 'practice') renderPractice();
+    else if (state.route === 'arcade') renderArcade();
+    else if (state.route === 'learn') renderLearn();
     else if (state.route === 'progress') renderProgress();
     else if (state.route === 'coach') renderCoach();
     else renderSettings();
 }
 
 function go(route) {
+    if (arcadeGame) {
+        arcadeGame.destroy();
+        arcadeGame = null;
+    }
     state.route = route;
     render();
 }
@@ -28,6 +33,8 @@ window.submitAuth = typeof submitAuth === 'function' ? submitAuth : () => {};
 window.startLesson = typeof startLesson === 'function' ? startLesson : () => {};
 window.finishPractice = typeof finishPractice === 'function' ? finishPractice : () => {};
 window.resetPractice = typeof resetPractice === 'function' ? resetPractice : () => {};
+window.renderArcade = typeof renderArcade === 'function' ? renderArcade : () => {};
+window.startArcadeGame = typeof startArcadeGame === 'function' ? startArcadeGame : () => {};
 window.runCoach = typeof runCoach === 'function' ? runCoach : () => {};
 window.saveSettings = typeof saveSettings === 'function' ? saveSettings : () => {};
 window.backup = typeof backup === 'function' ? backup : () => {};
