@@ -54,21 +54,48 @@ function renderArcade() {
                 <canvas id="arcadeCanvas"></canvas>
                 
                 <div class="arcade-overlay-start" id="arcadeStartOverlay">
-                    <div class="arcade-modal-card">
+                    <div class="arcade-modal-card" style="max-width:520px;padding:32px 28px">
                         <div style="font-size:44px;margin-bottom:8px">⚡</div>
                         <h1 style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:900;letter-spacing:-0.03em">
                             CYBER MATRIX ORBITAL DEFENSE
                         </h1>
-                        <p style="font-size:13.5px;color:var(--text-muted);margin:8px 0 20px;line-height:1.5">
-                            Enemy word armadas are descending on the local neural orbital matrix. Type the highlighted characters to lock lasers and destroy threats. Procedural waves adapt to your real weakness telemetry.
+                        <p style="font-size:13.5px;color:var(--text-muted);margin:8px 0 16px;line-height:1.5">
+                            Enemy word armadas are descending on the orbital defense matrix. Type the highlighted characters to lock lasers and destroy threats. Select your combat tier and starting wave below.
                         </p>
-                        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px">
-                            <span class="badge badge-brand">Weak-Key Armada</span>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 20px;text-align:left">
+                            <div>
+                                <label style="font-size:11.5px;font-weight:800;color:var(--text-muted);display:block;margin-bottom:6px;letter-spacing:0.04em">
+                                    🎯 DIFFICULTY TIER
+                                </label>
+                                <select id="arcadeDifficultySelect" style="background:var(--surface-2);color:var(--text-main);border:1px solid var(--border-light);padding:9px 12px;border-radius:var(--radius-sm);width:100%;font-family:inherit;font-size:13px;outline:none;cursor:pointer">
+                                    <option value="cadet">🟢 Cadet (3–4 chars)</option>
+                                    <option value="tactical" selected>🔵 Tactical (5–7 chars)</option>
+                                    <option value="commander">🟣 Commander (8–14 chars)</option>
+                                    <option value="procedural">♾️ Neural Matrix (Procedural Weak-Keys)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:11.5px;font-weight:800;color:var(--text-muted);display:block;margin-bottom:6px;letter-spacing:0.04em">
+                                    ⚡ STARTING WAVE
+                                </label>
+                                <select id="arcadeWaveSelect" style="background:var(--surface-2);color:var(--text-main);border:1px solid var(--border-light);padding:9px 12px;border-radius:var(--radius-sm);width:100%;font-family:inherit;font-size:13px;outline:none;cursor:pointer">
+                                    <option value="1" selected>Wave 1 (Calibration)</option>
+                                    <option value="3">Wave 3 (Tactical Speed)</option>
+                                    <option value="5">Wave 5 (Orbital Storm)</option>
+                                    <option value="8">Wave 8 (Hyperdrive)</option>
+                                    <option value="10">Wave 10 (Nightmare)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+                            <span class="badge badge-brand">1,000+ Word Lexicon</span>
                             <span class="badge badge-purple">Laser Beam Lock</span>
                             <span class="badge badge-warning">EMP Spacebar Blast</span>
                             <span class="badge badge-success">High Score: ${highScore.toLocaleString()}</span>
                         </div>
-                        <button class="btn btn-primary btn-lg" onclick="startArcadeGame()">
+                        <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="startArcadeGame()">
                             ⚡ ENGAGE DEFENSE MATRIX
                         </button>
                     </div>
@@ -126,11 +153,16 @@ function initArcadeCanvas() {
 }
 
 function startArcadeGame() {
+    const diffEl = document.getElementById('arcadeDifficultySelect');
+    const waveEl = document.getElementById('arcadeWaveSelect');
+    const difficultyTier = diffEl ? diffEl.value : 'tactical';
+    const startWave = waveEl ? parseInt(waveEl.value, 10) : 1;
+
     document.getElementById('arcadeStartOverlay').style.display = 'none';
     document.getElementById('arcadeGameOverOverlay').style.display = 'none';
 
     if (arcadeGame) arcadeGame.destroy();
-    arcadeGame = new ArcadeEngine();
+    arcadeGame = new ArcadeEngine(difficultyTier, startWave);
     arcadeGame.start();
 }
 
@@ -249,29 +281,43 @@ function generateProceduralPseudoWord(weakKeys = [], targetLength = 6) {
     return word.slice(0, Math.max(4, targetLength));
 }
 
-function selectArcadeWord(wave, isBoss, activeInitialLetters, weakKeys = []) {
+function selectArcadeWord(wave, isBoss, activeInitialLetters, weakKeys = [], difficultyTier = 'tactical') {
     let pool = [];
+
     if (isBoss) {
         pool = ARCADE_TIER_3_WORDS;
-    } else if (wave <= 2) {
+    } else if (difficultyTier === 'cadet') {
         pool = ARCADE_TIER_1_WORDS;
-    } else if (wave <= 5) {
-        pool = Math.random() > 0.4 ? ARCADE_TIER_2_WORDS : ARCADE_TIER_1_WORDS;
-    } else if (wave <= 8) {
-        pool = Math.random() > 0.35 ? ARCADE_TIER_2_WORDS : ARCADE_TIER_3_WORDS;
-    } else {
+    } else if (difficultyTier === 'commander') {
         pool = ARCADE_TIER_3_WORDS;
+    } else if (difficultyTier === 'procedural') {
+        const length = Math.min(10, 4 + Math.floor(wave * 0.7));
+        const pseudo = generateProceduralPseudoWord(weakKeys, length);
+        if (!activeInitialLetters.has(pseudo[0].toLowerCase())) {
+            return pseudo;
+        }
+        pool = ARCADE_TIER_2_WORDS;
+    } else {
+        // 'tactical' (default progressive)
+        if (wave <= 2) {
+            pool = ARCADE_TIER_1_WORDS;
+        } else if (wave <= 5) {
+            pool = Math.random() > 0.4 ? ARCADE_TIER_2_WORDS : ARCADE_TIER_1_WORDS;
+        } else {
+            pool = Math.random() > 0.35 ? ARCADE_TIER_2_WORDS : ARCADE_TIER_3_WORDS;
+        }
     }
 
-    if (!isBoss && wave >= 2 && Math.random() < 0.45) {
-        const length = Math.min(10, 4 + Math.floor(wave * 0.8));
+    // Procedural pseudo-words mixed into higher waves
+    if (!isBoss && wave >= 3 && Math.random() < 0.4) {
+        const length = Math.min(10, 4 + Math.floor(wave * 0.75));
         const pseudo = generateProceduralPseudoWord(weakKeys, length);
-        if (!activeInitialLetters.has(pseudo[0].toUpperCase())) {
+        if (!activeInitialLetters.has(pseudo[0].toLowerCase())) {
             return pseudo;
         }
     }
 
-    const available = pool.filter(w => !activeInitialLetters.has(w[0].toUpperCase()));
+    const available = pool.filter(w => !activeInitialLetters.has(w[0].toLowerCase()));
     if (available.length > 0) {
         return available[Math.floor(Math.random() * available.length)];
     }
@@ -302,11 +348,12 @@ function formatWordForWave(word, wave, isBoss) {
 // Arcade Combat Engine Class
 // ==========================================================================
 class ArcadeEngine {
-    constructor() {
+    constructor(difficultyTier = 'tactical', startWave = 1) {
         this.canvas = document.getElementById('arcadeCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.running = false;
-        this.wave = 1;
+        this.difficultyTier = difficultyTier;
+        this.wave = startWave || 1;
         this.score = 0;
         this.streak = 0;
         this.maxStreak = 0;
@@ -328,11 +375,11 @@ class ArcadeEngine {
         this.errorMap = {};
         this.timingBlob = [];
 
-        this.waveTotalShips = 14; // Generous battle size per wave
+        this.waveTotalShips = 14 + (this.wave - 1) * 4;
         this.waveSpawnedCount = 0;
         this.waveDestroyedCount = 0;
         this.lastSpawnTime = performance.now();
-        this.spawnInterval = 2000;
+        this.spawnInterval = Math.max(800, 2000 - this.wave * 100);
 
         this.initStars();
         this.setupKeyboard();
@@ -356,7 +403,7 @@ class ArcadeEngine {
         const activeInitialLetters = new Set(this.ships.map(s => s.word[0].toLowerCase()));
         const isBoss = this.waveSpawnedCount === this.waveTotalShips - 1 && this.wave % 3 === 0;
 
-        let rawWord = selectArcadeWord(this.wave, isBoss, activeInitialLetters, weakKeys);
+        let rawWord = selectArcadeWord(this.wave, isBoss, activeInitialLetters, weakKeys, this.difficultyTier);
         let word = formatWordForWave(rawWord, this.wave, isBoss);
 
         const margin = 110;
@@ -404,6 +451,8 @@ class ArcadeEngine {
                 return;
             }
 
+            // Guard against OS key repeat auto-advancing/completing words
+            if (e.repeat) return;
             if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
             const char = e.key;
             const now = performance.now();
@@ -432,9 +481,9 @@ class ArcadeEngine {
                 }
             }
 
-            // Find closest candidate starting with char (case-tolerant)
+            // Find closest candidate starting with char that has NOT been started yet
             const candidates = this.ships
-                .filter(s => s.word[0] === char || s.word[0].toLowerCase() === char.toLowerCase())
+                .filter(s => s.typedIndex === 0 && (s.word[0] === char || s.word[0].toLowerCase() === char.toLowerCase()))
                 .sort((a, b) => b.y - a.y); // nearest to base
 
             if (candidates.length > 0) {
