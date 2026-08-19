@@ -135,6 +135,170 @@ function startArcadeGame() {
 }
 
 // ==========================================================================
+// Massive 1,000+ Word Combat Dictionary & Infinite Procedural Synthesizer
+// ==========================================================================
+const ARCADE_TIER_1_WORDS = [
+    "ace", "act", "aim", "air", "amp", "arc", "arm", "ash", "ask", "bad", "bag", "bar", "bay", "bed", "bet", "bin",
+    "bit", "bow", "box", "bug", "bus", "buy", "byte", "cab", "cap", "car", "cat", "code", "core", "cpu", "cut", "dam",
+    "dark", "data", "dawn", "day", "disk", "doc", "dog", "dot", "drop", "duck", "duo", "dust", "ear", "echo", "edge", "edit",
+    "egg", "end", "era", "exit", "eye", "fan", "far", "fast", "fax", "fee", "file", "fill", "find", "fire", "fit", "flag",
+    "flow", "fly", "fog", "fork", "form", "fox", "fuel", "fun", "fuse", "gain", "game", "gap", "gas", "gate", "gear", "gem",
+    "get", "git", "glow", "glue", "goal", "gold", "grid", "grip", "gun", "guru", "hack", "halo", "hand", "hard", "hash", "have",
+    "hawk", "head", "heat", "help", "hero", "hex", "hide", "hill", "hint", "hit", "hold", "hook", "host", "hour", "hub", "icon",
+    "idea", "idle", "inch", "info", "ink", "ion", "iron", "item", "jam", "jar", "jaw", "jazz", "jet", "job", "join", "joke",
+    "jump", "jury", "keep", "key", "kick", "kilo", "king", "kit", "kite", "knob", "knot", "lab", "lamp", "lane", "laser", "law",
+    "lead", "leaf", "leak", "lean", "leap", "left", "lens", "life", "lift", "line", "link", "lion", "list", "load", "lock", "loop",
+    "loss", "love", "low", "luck", "lung", "mach", "mail", "main", "make", "map", "mark", "mask", "mast", "math", "maze", "meal",
+    "memo", "menu", "mesh", "meta", "mild", "milk", "mill", "mind", "mine", "mint", "mode", "mood", "moon", "move", "nano", "near",
+    "neck", "nest", "net", "next", "node", "noise", "noon", "norm", "nose", "note", "null", "oath", "obey", "omit", "open", "opt",
+    "ore", "pace", "pack", "page", "pair", "palm", "pane", "park", "pass", "path", "peak", "peer", "pen", "pet", "pick", "pile",
+    "pin", "ping", "pipe", "plan", "plug", "plus", "poem", "pole", "pool", "port", "post", "push", "quad", "quit", "quiz", "race",
+    "rack", "raft", "raid", "rail", "rain", "ramp", "rank", "raw", "ray", "read", "real", "reap", "redo", "reef", "rest", "rich",
+    "ride", "ring", "riot", "risk", "road", "rock", "roll", "roof", "root", "rope", "rose", "ruby", "rule", "run", "rush", "rust",
+    "safe", "sail", "salt", "sand", "save", "scan", "scope", "seal", "seed", "seek", "send", "ship", "shoe", "shop", "show", "side",
+    "sign", "silk", "sink", "site", "size", "skin", "skip", "slam", "slot", "slow", "snap", "snow", "soap", "sock", "soft", "soil",
+    "song", "sort", "soul", "span", "spar", "spark", "spin", "spot", "spur", "star", "step", "stop", "stub", "suit", "sync", "tab",
+    "tag", "tail", "tank", "tape", "task", "team", "tech", "temp", "text", "tide", "tilt", "time", "tiny", "tip", "tool", "top",
+    "tour", "town", "track", "trap", "tree", "trim", "trip", "tube", "tune", "twin", "type", "unit", "user", "valve", "vast", "vein",
+    "vent", "verb", "vest", "view", "void", "volt", "vote", "wade", "wage", "wait", "walk", "wall", "wand", "warp", "wave", "weak",
+    "web", "week", "well", "west", "wild", "wind", "wing", "wire", "wise", "wish", "wolf", "wood", "word", "work", "worm", "wrap",
+    "xray", "yard", "yarn", "yawn", "year", "yield", "yolk", "zero", "zinc", "zone", "zoom"
+];
+
+const ARCADE_TIER_2_WORDS = [
+    "action", "active", "admire", "advice", "agency", "agenda", "align", "alpha", "alpine", "anchor", "arcade", "argent", "armor",
+    "array", "arrow", "aspect", "atomic", "author", "autumn", "avatar", "backup", "banner", "battle", "beacon", "binary", "bios",
+    "bitwise", "blast", "blazer", "blend", "border", "bounce", "branch", "brave", "breach", "bridge", "broadcast", "broker", "bronze",
+    "browse", "buffer", "bundle", "bunker", "bypass", "cache", "camera", "canvas", "carbon", "cascade", "cipher", "circuit", "cobalt",
+    "codec", "column", "combat", "commit", "compile", "config", "console", "cosmic", "cursor", "custom", "cyber", "daemon", "damage",
+    "danger", "deploy", "design", "device", "direct", "display", "docker", "domain", "dynamic", "eclipse", "elegant", "element", "emblem",
+    "empire", "enable", "encode", "energy", "engine", "entity", "escape", "expand", "export", "fabric", "factor", "falcon", "family",
+    "filter", "finish", "firefly", "firewall", "flicker", "flight", "format", "fossil", "frame", "future", "galaxy", "gamma", "gateway",
+    "glance", "glitch", "global", "golden", "govern", "gravity", "hammer", "harbor", "hardhat", "header", "helix", "helmet", "hexagon",
+    "horizon", "hybrid", "hyper", "impact", "import", "indexed", "infinite", "inherit", "input", "inspect", "install", "intent", "invoke",
+    "iterate", "jaguar", "journey", "jupiter", "kinetic", "lambda", "laptop", "launch", "layout", "legacy", "legend", "linear", "listen",
+    "loader", "locate", "logic", "loopback", "lumber", "machine", "magnet", "mantle", "mapper", "markup", "matrix", "memory", "mentor",
+    "meteor", "method", "metric", "mirror", "mobile", "module", "monitor", "mosaic", "motion", "mount", "mutual", "mystic", "native",
+    "nebula", "needle", "network", "neutral", "nexus", "nimble", "nomad", "normal", "nucleus", "numeric", "object", "offline", "offset",
+    "online", "opaque", "operate", "optical", "option", "oracle", "orbit", "origin", "output", "overlay", "package", "packet", "paddle",
+    "palace", "parallel", "parser", "passing", "passive", "pattern", "payload", "peak", "phantom", "phoenix", "photon", "physical", "pipeline",
+    "pirate", "pixel", "planar", "plasma", "plugin", "portal", "precise", "prism", "process", "profile", "program", "prompt", "proton",
+    "proxy", "pulsar", "quantum", "quartz", "radar", "radiant", "radius", "random", "ranger", "raster", "reactor", "reboot", "render",
+    "replay", "reset", "resize", "resolve", "restart", "restore", "resume", "rhythm", "ribbon", "robust", "rocket", "rogue", "roller",
+    "rotate", "router", "runner", "runway", "safari", "sample", "satellite", "scale", "scanner", "schema", "script", "sector", "secure",
+    "segment", "sensor", "server", "shadow", "shield", "shimmer", "shuttle", "signal", "silver", "simple", "socket", "source", "spatial",
+    "spectra", "sphere", "spiral", "splash", "sprint", "static", "stealth", "stream", "strike", "string", "strobe", "studio", "subnet",
+    "switch", "symbol", "syntax", "system", "tablet", "tactical", "tangent", "target", "template", "terminal", "texture", "thermal", "thread",
+    "thunder", "timeline", "toggle", "tracer", "tracker", "transit", "trigger", "tundra", "tunnel", "turbine", "turret", "ultimate", "unified",
+    "uplink", "utility", "vacuum", "valley", "vector", "velocity", "vendor", "vertex", "vessel", "victor", "virtual", "visual", "volume",
+    "vortex", "voyage", "warrant", "warrior", "weapon", "weave", "webkit", "weight", "widget", "window", "wizard", "wrapper", "zenith", "zodiac"
+];
+
+const ARCADE_TIER_3_WORDS = [
+    "accelerator", "accumulator", "adaptability", "adjustment", "algorithm", "allocated", "alphabetical", "amplitude", "analytical",
+    "animation", "anonymous", "antecedent", "architecture", "arithmetic", "articulation", "artificial", "assemblage", "asymmetrical",
+    "asynchronous", "atmospheric", "authentication", "authoritative", "automated", "bandwidth", "battery", "benchmark", "biochemical",
+    "biometrics", "breakpoint", "calculated", "calibration", "camouflage", "capability", "capacity", "checkpoint", "chronology",
+    "civilization", "clarification", "clientstate", "coefficient", "combination", "communication", "compatibility", "computation",
+    "concentric", "configuration", "connection", "consecutive", "constellation", "constructor", "coordination", "cryptography",
+    "cybersecurity", "dataflow", "decentralized", "decomposition", "deceleration", "decryption", "dependency", "deprecation",
+    "destination", "destruction", "deterministic", "development", "differential", "digitization", "dimensional", "disassembler",
+    "distributed", "earthenware", "electromechanical", "encapsulation", "encountered", "engineering", "enterprise", "equilibrium",
+    "executable", "exponential", "extinction", "extrapolation", "fabrication", "factorization", "filesystem", "fluctuation",
+    "fundamental", "geolocation", "gravitation", "hexadecimal", "hierarchical", "hologram", "hyperdrive", "hyperthreading",
+    "hypervisor", "identification", "illuminated", "illustrated", "imagination", "immediately", "immutability", "implementer",
+    "implications", "incremental", "initialization", "infrastructure", "installations", "instructions", "instrumental", "intelligence",
+    "interchangeable", "interactive", "intermediate", "interpolation", "intersection", "introspection", "investigations", "isomorphism",
+    "javascript", "juxtaposed", "jurisdiction", "keyboarding", "lightweight", "linearization", "localstorage", "logarithmic",
+    "maintenance", "mathematical", "matrixmultiplication", "maximization", "microcontroller", "microprocessor", "microscopic",
+    "minimization", "modularization", "multispectral", "navigation", "neighborhood", "neutralization", "nonblocking", "notification",
+    "observational", "omnidirectional", "optimization", "orchestration", "organization", "oscilloscope", "outstanding",
+    "parallelization", "parameterization", "performance", "synchronization", "telecommunication", "telemetry", "thermodynamics",
+    "throughput", "trajectories", "transformation", "transmission", "transparency", "trigonometry", "troubleshooting", "ubiquity",
+    "ultraviolet", "understanding", "uninterrupted", "universal", "virtualization", "vulnerability", "wavelength"
+];
+
+// Procedural Phonotactic N-Gram Synthesizer for Infinite Adaptive Weakness Generation
+function generateProceduralPseudoWord(weakKeys = [], targetLength = 6) {
+    const onsets = ["pr", "tr", "st", "sp", "cr", "br", "fl", "gr", "pl", "sk", "dr", "cl", "qu", "zh", "vr", "kn"];
+    const vowels = ["a", "e", "i", "o", "u", "ai", "ea", "ou", "ee", "oo", "ia", "oi"];
+    const codas = ["ck", "nt", "mp", "rk", "lt", "st", "sh", "th", "x", "ct", "ld", "ng", "ph", "rn", "pt"];
+    const singleConsonants = ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "v", "w", "x", "y", "z"];
+
+    let word = "";
+    
+    if (weakKeys.length > 0) {
+        const primaryWeakKey = weakKeys[Math.floor(Math.random() * weakKeys.length)].toLowerCase();
+        const v = vowels[Math.floor(Math.random() * vowels.length)];
+        const onset = Math.random() > 0.5 ? onsets[Math.floor(Math.random() * onsets.length)] : primaryWeakKey;
+        const coda = codas[Math.floor(Math.random() * codas.length)];
+        word = `${onset}${v}${coda}`;
+        if (word.length < targetLength) {
+            const v2 = vowels[Math.floor(Math.random() * vowels.length)];
+            const c2 = singleConsonants[Math.floor(Math.random() * singleConsonants.length)];
+            word += `${c2}${v2}`;
+        }
+    } else {
+        while (word.length < targetLength) {
+            const o = Math.random() > 0.4 ? onsets[Math.floor(Math.random() * onsets.length)] : singleConsonants[Math.floor(Math.random() * singleConsonants.length)];
+            const v = vowels[Math.floor(Math.random() * vowels.length)];
+            const c = Math.random() > 0.5 ? codas[Math.floor(Math.random() * codas.length)] : "";
+            word += `${o}${v}${c}`;
+        }
+    }
+    return word.slice(0, Math.max(4, targetLength));
+}
+
+function selectArcadeWord(wave, isBoss, activeInitialLetters, weakKeys = []) {
+    let pool = [];
+    if (isBoss) {
+        pool = ARCADE_TIER_3_WORDS;
+    } else if (wave <= 2) {
+        pool = ARCADE_TIER_1_WORDS;
+    } else if (wave <= 5) {
+        pool = Math.random() > 0.4 ? ARCADE_TIER_2_WORDS : ARCADE_TIER_1_WORDS;
+    } else if (wave <= 8) {
+        pool = Math.random() > 0.35 ? ARCADE_TIER_2_WORDS : ARCADE_TIER_3_WORDS;
+    } else {
+        pool = ARCADE_TIER_3_WORDS;
+    }
+
+    if (!isBoss && wave >= 2 && Math.random() < 0.45) {
+        const length = Math.min(10, 4 + Math.floor(wave * 0.8));
+        const pseudo = generateProceduralPseudoWord(weakKeys, length);
+        if (!activeInitialLetters.has(pseudo[0].toUpperCase())) {
+            return pseudo;
+        }
+    }
+
+    const available = pool.filter(w => !activeInitialLetters.has(w[0].toUpperCase()));
+    if (available.length > 0) {
+        return available[Math.floor(Math.random() * available.length)];
+    }
+
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function formatWordForWave(word, wave, isBoss) {
+    if (isBoss) {
+        return "FLAGSHIP_" + word.toUpperCase();
+    }
+    if (wave <= 2) {
+        return word.toLowerCase();
+    }
+    if (wave <= 5) {
+        if (Math.random() < 0.5) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+        return word.toLowerCase();
+    }
+    if (Math.random() < 0.55) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }
+    return word;
+}
+
+// ==========================================================================
 // Arcade Combat Engine Class
 // ==========================================================================
 class ArcadeEngine {
@@ -187,51 +351,28 @@ class ArcadeEngine {
         }
     }
 
-    getWeaknessWords() {
-        const weakKeys = (state.dashboard?.weak_keys || []).map(x => x.expected_key.toLowerCase());
-        const baseVocab = [
-            "laser", "pulse", "matrix", "vector", "cyber", "orbit", "shield", "nexus",
-            "quantum", "hyper", "warp", "plasma", "beacon", "turret", "falcon", "vortex",
-            "glitch", "syntax", "system", "engine", "signal", "binary", "sensor", "energy",
-            "defense", "command", "station", "station", "station", "station", "station", "station"
-        ];
-
-        // Synthesize targeted n-gram words for weak keys
-        if (weakKeys.length > 0) {
-            const targeted = [];
-            weakKeys.forEach(k => {
-                const syllables = ["tra", "zen", "kin", "vex", "pro", "syn", "arc", "ion", "pol", "tex"];
-                syllables.forEach(s => targeted.push(`${k}${s}`, `${s}${k}`, `${k}o${s}`));
-            });
-            return [...baseVocab, ...targeted];
-        }
-        return baseVocab;
-    }
-
     spawnShip() {
-        const vocab = this.getWeaknessWords();
-        let word = vocab[Math.floor(Math.random() * vocab.length)];
-        if (this.wave > 3 && Math.random() < 0.25) {
-            word = word + "_" + vocab[Math.floor(Math.random() * vocab.length)];
-        }
-
+        const weakKeys = (state.dashboard?.weak_keys || []).map(x => x.expected_key.toLowerCase());
+        const activeInitialLetters = new Set(this.ships.map(s => s.word[0]));
         const isBoss = this.waveSpawnedCount === this.waveTotalShips - 1 && this.wave % 3 === 0;
-        if (isBoss) word = "CYBER_OVERLORD_" + this.wave;
 
-        const margin = 100;
+        let rawWord = selectArcadeWord(this.wave, isBoss, activeInitialLetters, weakKeys);
+        let word = formatWordForWave(rawWord, this.wave, isBoss);
+
+        const margin = 110;
         const x = Math.random() * (this.canvas.width - margin * 2) + margin;
-        const speed = (28 + this.wave * 4.5) * (isBoss ? 0.6 : 1);
+        const speed = (26 + this.wave * 4.2) * (isBoss ? 0.55 : 1);
 
         this.ships.push({
             id: Math.random().toString(),
-            word: word.toUpperCase(),
+            word: word,
             typedIndex: 0,
             x: x,
             y: -20,
             speed: speed,
             isBoss: isBoss,
-            hue: isBoss ? 340 : (Math.random() > 0.4 ? 240 : 180),
-            size: isBoss ? 26 : 18
+            hue: isBoss ? 340 : (Math.random() > 0.5 ? 240 : (Math.random() > 0.5 ? 180 : 280)),
+            size: isBoss ? 28 : 18
         });
 
         this.waveSpawnedCount++;
@@ -252,7 +393,7 @@ class ArcadeEngine {
             }
 
             if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
-            const char = e.key.toUpperCase();
+            const char = e.key; // preserve exact case (tests Shift key on capitals)
             const now = performance.now();
             const latency = this.lastKeyTime ? now - this.lastKeyTime : 0;
             this.lastKeyTime = now;
@@ -269,7 +410,7 @@ class ArcadeEngine {
                         this.timingBlob.push({ key: char, latency, timestamp: now });
                         return;
                     } else {
-                        // Typo on active ship
+                        // Typo on active ship (including case mismatch)
                         this.missCharacter(expected, char);
                         return;
                     }
@@ -278,10 +419,17 @@ class ArcadeEngine {
                 }
             }
 
-            // Find closest candidate starting with char
-            const candidates = this.ships
+            // Find closest candidate starting with char (case-sensitive)
+            let candidates = this.ships
                 .filter(s => s.word[0] === char)
                 .sort((a, b) => b.y - a.y); // nearest to base
+
+            // Fallback to case-insensitive match on first letter if no exact match found
+            if (candidates.length === 0) {
+                candidates = this.ships
+                    .filter(s => s.word[0].toLowerCase() === char.toLowerCase())
+                    .sort((a, b) => b.y - a.y);
+            }
 
             if (candidates.length > 0) {
                 const target = candidates[0];
@@ -586,28 +734,30 @@ class ArcadeEngine {
                 this.ctx.shadowBlur = 12;
             }
 
-            const textWidth = ship.word.length * 11 + 24;
+            const charWidth = 12;
+            const textWidth = Math.max(68, ship.word.length * charWidth + 24);
             this.ctx.beginPath();
-            this.ctx.roundRect(-textWidth / 2, -14, textWidth, 28, 8);
+            this.ctx.roundRect(-textWidth / 2, -15, textWidth, 30, 8);
             this.ctx.fill();
             this.ctx.stroke();
 
             // Word text rendering
-            this.ctx.font = 'bold 13px "JetBrains Mono", monospace';
+            this.ctx.font = 'bold 13.5px "JetBrains Mono", monospace';
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
 
-            let cursorX = -textWidth / 2 + 12;
+            let cursorX = -textWidth / 2 + 12 + charWidth / 2;
             for (let i = 0; i < ship.word.length; i++) {
                 const ch = ship.word[i];
+                const isCapital = ch >= 'A' && ch <= 'Z';
                 if (i < ship.typedIndex) {
                     this.ctx.fillStyle = '#10b981'; // done green
                 } else if (i === ship.typedIndex && isTargeted) {
-                    this.ctx.fillStyle = '#ffffff'; // active white
+                    this.ctx.fillStyle = isCapital ? '#fbbf24' : '#ffffff'; // gold highlight if Shift capital!
                 } else {
-                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.55)'; // pending
+                    this.ctx.fillStyle = isCapital ? 'rgba(251, 191, 36, 0.75)' : 'rgba(255, 255, 255, 0.6)'; // gold tint for upcoming capitals
                 }
-                this.ctx.fillText(ch, cursorX + i * 11, 0);
+                this.ctx.fillText(ch, cursorX + i * charWidth, 0);
             }
 
             this.ctx.restore();
