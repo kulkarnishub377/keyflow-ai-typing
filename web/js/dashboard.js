@@ -66,7 +66,8 @@ function renderDashboard() {
                         <div style="height:100%;width:${goalPct}%;background:var(--gradient-brand);border-radius:999px;transition:width 0.6s var(--ease-spring)"></div>
                     </div>
                 </div>
-                <div style="display:flex;justify-content:flex-end;margin-top:14px">
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+                    <button class="btn btn-secondary" onclick="go('arcade')">⚡ Arcade Defense</button>
                     <button class="btn btn-primary" onclick="go('practice')">Start Daily Practice</button>
                 </div>
             </div>
