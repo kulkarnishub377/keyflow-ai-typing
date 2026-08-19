@@ -132,7 +132,7 @@ function layout(content, title, subtitle) {
                             <div class="user-name">${dn}</div>
                             <div class="user-role">Offline Profile</div>
                         </div>
-                        <button class="btn btn-ghost btn-sm" title="Sign out" onclick="logout()" style="padding:4px 8px">✕</button>
+                        <button class="btn btn-ghost btn-sm" title="Sign out" onclick="openLogoutModal()" style="padding:4px 8px">✕</button>
                     </div>
                 </div>
             </aside>
@@ -166,7 +166,7 @@ function layout(content, title, subtitle) {
 // ==========================================================================
 const COMMANDS = [
     { id: 'practice', label: 'Start Free Practice Studio', category: 'Navigation', icon: '⌨', action: () => go('practice') },
-    { id: 'arcade', label: 'Launch Cyber Matrix Orbital Defense Game', category: 'Combat', icon: '⚡', action: () => go('arcade') },
+    { id: 'arcade', label: 'Launch Cyber Matrix Arcade Game', category: 'Combat', icon: '⚡', action: () => go('arcade') },
     { id: 'adaptive', label: 'Launch Targeted AI Micro-Drill', category: 'Training', icon: '✦', action: () => startAdaptiveDrill() },
     { id: 'dashboard', label: 'Go to Dashboard', category: 'Navigation', icon: '⌂', action: () => go('dashboard') },
     { id: 'learn', label: 'Open Curriculum & Lessons', category: 'Navigation', icon: '◎', action: () => go('learn') },
@@ -175,11 +175,46 @@ const COMMANDS = [
     { id: 'settings', label: 'Open Settings & Preferences', category: 'Settings', icon: '⚙', action: () => go('settings') },
     { id: 'theme', label: 'Toggle Dark / Light Theme', category: 'Settings', icon: '◐', action: () => toggleTheme() },
     { id: 'backup', label: 'Export Encrypted Local Backup', category: 'Security', icon: '🔒', action: () => backup() },
+    { id: 'logout', label: 'Sign Out of Profile', category: 'Auth', icon: '⎋', action: () => openLogoutModal() },
     { id: 'exit', label: 'Quit KeyFlow Desktop Application', category: 'System', icon: '✕', action: () => openExitModal() }
 ];
 
 let selectedCommandIndex = 0;
 let filteredCommands = [...COMMANDS];
+
+function openLogoutModal() {
+    const el = document.getElementById('logoutModal');
+    if (!el) return;
+    const dn = esc(state.user?.display_name || state.user?.username || 'Learner');
+    el.style.display = 'flex';
+    el.innerHTML = `
+        <div class="cmd-palette-modal" style="max-width:440px;padding:32px 28px;text-align:center" onclick="event.stopPropagation()">
+            <div style="font-size:38px;margin-bottom:10px">⎋</div>
+            <h3 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:6px">
+                Sign Out of ${dn}?
+            </h3>
+            <p style="font-size:13.5px;color:var(--text-muted);line-height:1.5;margin-bottom:24px">
+                You will return to the profile authentication screen. All practice telemetry and progress remain safely stored on this computer.
+            </p>
+            <div style="display:flex;gap:10px;justify-content:center">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeLogoutModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex:1;background:var(--accent-rose)" onclick="confirmLogout()">Sign Out</button>
+            </div>
+        </div>
+    `;
+}
+
+function closeLogoutModal() {
+    const el = document.getElementById('logoutModal');
+    if (el) el.style.display = 'none';
+}
+
+async function confirmLogout() {
+    closeLogoutModal();
+    if (typeof logout === 'function') {
+        await logout();
+    }
+}
 
 function openExitModal() {
     const el = document.getElementById('exitModal');
