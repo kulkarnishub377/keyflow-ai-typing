@@ -189,8 +189,7 @@ function setupTyping() {
     const isMaster = Boolean(state.selectedLesson?.strict_mode);
     const targetWpm = Number(state.selectedLesson?.target_wpm) || 0;
 
-    const paint = typed => {
-        let charIndex = 0;
+    const initPrompt = () => {
         const paragraphs = text.split('\n');
         let html = '';
 
@@ -200,26 +199,17 @@ function setupTyping() {
                 html += '<span class="word">';
                 for (let c = 0; c < w.length; c++) {
                     const ch = w[c];
-                    const i = charIndex;
-                    const status = i < typed.length ? (typed[i] === ch ? 'done' : 'bad') : i === typed.length ? 'current' : 'pending';
-                    html += `<span class="${status}">${esc(ch)}</span>`;
-                    charIndex++;
+                    html += `<span class="pending">${esc(ch)}</span>`;
                 }
 
                 if (wIdx < words.length - 1) {
-                    const i = charIndex;
-                    const status = i < typed.length ? (typed[i] === ' ' ? 'done' : 'bad') : i === typed.length ? 'current' : 'pending';
-                    html += `<span class="${status}">·</span>`;
-                    charIndex++;
+                    html += `<span class="pending">·</span>`;
                 }
                 html += '</span>';
             });
 
             if (pIdx < paragraphs.length - 1) {
-                const i = charIndex;
-                const status = i < typed.length ? (typed[i] === '\n' ? 'done' : 'bad') : i === typed.length ? 'current' : 'pending';
-                html += `<span class="${status} paragraph-break"></span>`;
-                charIndex++;
+                html += `<span class="pending paragraph-break"></span>`;
             }
         });
 
@@ -228,8 +218,29 @@ function setupTyping() {
         }
 
         prompt.innerHTML = html;
+        return Array.from(prompt.querySelectorAll('span:not(.word)'));
+    };
 
-        const activeChar = prompt.querySelector('.current');
+    const spanElements = initPrompt();
+
+    const paint = typed => {
+        for (let i = 0; i < spanElements.length; i++) {
+            const span = spanElements[i];
+            let status = 'pending';
+            if (i < typed.length) {
+                const expected = text[i];
+                status = (typed[i] === expected) ? 'done' : 'bad';
+            } else if (i === typed.length) {
+                status = 'current';
+            }
+            
+            const expectedClass = status + (span.classList.contains('paragraph-break') ? ' paragraph-break' : '');
+            if (span.className !== expectedClass) {
+                span.className = expectedClass;
+            }
+        }
+
+        const activeChar = spanElements[typed.length];
         if (activeChar) {
             activeChar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         }
@@ -267,10 +278,21 @@ function setupTyping() {
 
     input.onfocus = () => {
         if (wrapper) wrapper.classList.add('focused');
+        const overlay = document.getElementById('focusOverlay');
+        if (overlay) overlay.style.display = 'none';
     };
 
     input.onblur = () => {
         if (wrapper) wrapper.classList.remove('focused');
+        let overlay = document.getElementById('focusOverlay');
+        if (!overlay && wrapper) {
+            overlay = document.createElement('div');
+            overlay.id = 'focusOverlay';
+            overlay.className = 'focus-overlay';
+            overlay.innerHTML = '<span>Click to Resume Typing</span>';
+            wrapper.appendChild(overlay);
+        }
+        if (overlay) overlay.style.display = 'flex';
     };
 
     input.onkeydown = e => {
@@ -306,6 +328,11 @@ function setupTyping() {
             lastKeyTime = now;
         }
     };
+
+    const wpmEl = document.getElementById('live-wpm');
+    const accEl = document.getElementById('live-accuracy');
+    const errEl = document.getElementById('live-errors');
+    const timeEl = document.getElementById('live-time');
 
     input.oninput = () => {
         const typed = input.value;
@@ -368,11 +395,6 @@ function setupTyping() {
         const elapsed = Math.max(0.25, (performance.now() - state.practice.started) / 1000);
         const wpm = (correct / 5) / (elapsed / 60);
         const acc = typed.length ? (correct / typed.length) * 100 : 100;
-
-        const wpmEl = document.getElementById('live-wpm');
-        const accEl = document.getElementById('live-accuracy');
-        const errEl = document.getElementById('live-errors');
-        const timeEl = document.getElementById('live-time');
 
         if (wpmEl) wpmEl.innerHTML = `${isFinite(wpm) ? Math.round(wpm) : 0} <small style="font-size:12px;font-weight:600;color:var(--text-muted)">WPM</small>`;
         if (accEl) {

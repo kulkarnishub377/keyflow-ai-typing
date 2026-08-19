@@ -706,6 +706,11 @@ class OrbitalDefenseEngine {
         let rawWord = selectArcadeWord(this.wave, isBoss, activeInitialLetters, weakKeys, this.difficultyTier);
         let word = formatWordForWave(rawWord, this.wave, isBoss);
 
+        let hasWeakKey = false;
+        if (weakKeys && weakKeys.length > 0) {
+            hasWeakKey = weakKeys.some(k => word.toLowerCase().includes(k));
+        }
+
         const margin = 110;
         const x = Math.random() * (this.canvas.width - margin * 2) + margin;
         const speed = (22 + this.wave * 2.8) * (isBoss ? 0.55 : 1);
@@ -718,7 +723,8 @@ class OrbitalDefenseEngine {
             y: -24,
             speed: speed,
             isBoss: isBoss,
-            hue: isBoss ? 340 : (Math.random() > 0.5 ? 240 : (Math.random() > 0.5 ? 180 : 280)),
+            hue: isBoss ? 340 : (hasWeakKey ? 350 : (Math.random() > 0.5 ? 240 : (Math.random() > 0.5 ? 180 : 280))),
+            hasWeakKey: hasWeakKey,
             size: isBoss ? 28 : 18,
             errorFlash: 0
         });
@@ -1074,6 +1080,12 @@ class OrbitalDefenseEngine {
                 this.ctx.lineWidth = 3;
                 this.ctx.shadowColor = '#f43f5e';
                 this.ctx.shadowBlur = 18;
+            } else if (ship.hasWeakKey && !ship.isBoss) {
+                this.ctx.fillStyle = `hsla(${ship.hue}, 80%, 20%, 0.85)`;
+                this.ctx.strokeStyle = isTargeted ? '#ffffff' : '#f43f5e';
+                this.ctx.lineWidth = isTargeted ? 2.5 : 2;
+                this.ctx.shadowColor = '#f43f5e';
+                this.ctx.shadowBlur = isTargeted ? 20 : 12;
             } else {
                 this.ctx.fillStyle = `hsla(${ship.hue}, 80%, 20%, 0.85)`;
                 this.ctx.strokeStyle = isTargeted ? '#ffffff' : `hsla(${ship.hue}, 100%, 65%, 0.9)`;

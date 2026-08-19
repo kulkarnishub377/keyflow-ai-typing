@@ -43,6 +43,7 @@ function renderSettings() {
                             <option value="off" ${sound === 'off' ? 'selected' : ''}>Muted (Silent Typing)</option>
                             <option value="click" ${sound === 'click' ? 'selected' : ''}>Mechanical Switch Click (Synthesized)</option>
                             <option value="beep" ${sound === 'beep' ? 'selected' : ''}>Soft Studio Beep</option>
+                            <option value="typewriter" ${sound === 'typewriter' ? 'selected' : ''}>Vintage Typewriter (Clack & Ding)</option>
                         </select>
                     </div>
 

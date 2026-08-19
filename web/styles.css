@@ -117,6 +117,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   user-select: none;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 button, input, select, textarea {
@@ -465,7 +466,7 @@ a {
   padding: 20px 24px;
   position: relative;
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: background-color 0.4s ease, border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .kf-card:hover {
@@ -796,6 +797,47 @@ a {
   overflow-y: auto;
   box-shadow: var(--shadow-md);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.focus-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: var(--radius-lg);
+}
+
+.focus-overlay span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--gradient-brand);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px var(--brand-glow); }
+  50% { box-shadow: 0 0 20px var(--brand); }
+}
+
+.blind-mode span.word {
+  filter: blur(4px);
+  opacity: 0.6;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.blind-mode span.word:has(.current) {
+  filter: blur(0);
+  opacity: 1;
 }
 
 .typing-canvas-wrapper.focused {

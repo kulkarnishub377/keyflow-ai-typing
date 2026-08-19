@@ -64,6 +64,24 @@ function playKeySound(type = 'click') {
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
             osc.start(now);
             osc.stop(now + 0.04);
+        } else if (state.settings?.sound_enabled === 'typewriter') {
+            if (type === '\n' || type === 'enter') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(820, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.03);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                osc.start(now);
+                osc.stop(now + 0.03);
+            }
         } else {
             // Mechanical switch click emulation
             osc.type = 'triangle';
