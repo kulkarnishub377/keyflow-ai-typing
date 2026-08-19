@@ -216,6 +216,19 @@ class Database:
 
     def save_session(self, user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
         now = datetime.now().isoformat(timespec="seconds")
+        raw_lesson_id = payload.get("lesson_id")
+        valid_lesson_id: int | None = None
+        if raw_lesson_id is not None:
+            try:
+                lid = int(raw_lesson_id)
+                if lid > 0:
+                    with self.connect() as con:
+                        exists = con.execute("SELECT 1 FROM lessons WHERE id=?", (lid,)).fetchone()
+                        if exists:
+                            valid_lesson_id = lid
+            except (ValueError, TypeError):
+                valid_lesson_id = None
+
         with self.connect() as con:
             cur = con.execute(
                 """
@@ -224,7 +237,7 @@ class Database:
                 """,
                 (
                     user_id,
-                    payload.get("lesson_id"),
+                    valid_lesson_id,
                     float(payload["duration_seconds"]),
                     int(payload["total_chars"]),
                     int(payload["correct_chars"]),
@@ -244,10 +257,9 @@ class Database:
                     (user_id, session_id, err["expected"], err["actual"], int(err.get("count", 1))),
                 )
 
-            lesson_id = payload.get("lesson_id")
-            if lesson_id:
+            if valid_lesson_id:
                 old = con.execute(
-                    "SELECT * FROM lesson_progress WHERE user_id=? AND lesson_id=?", (user_id, lesson_id)
+                    "SELECT * FROM lesson_progress WHERE user_id=? AND lesson_id=?", (user_id, valid_lesson_id)
                 ).fetchone()
                 if old:
                     con.execute(
@@ -259,13 +271,13 @@ class Database:
                             int(old["completed_count"]) + 1,
                             now,
                             user_id,
-                            lesson_id,
+                            valid_lesson_id,
                         ),
                     )
                 else:
                     con.execute(
                         "INSERT INTO lesson_progress(user_id,lesson_id,best_wpm,best_accuracy,completed_count,last_completed_at) VALUES(?,?,?,?,?,?)",
-                        (user_id, lesson_id, payload["wpm"], payload["accuracy"], 1, now),
+                        (user_id, valid_lesson_id, payload["wpm"], payload["accuracy"], 1, now),
                     )
         return {"id": session_id, "saved_at": now}
 

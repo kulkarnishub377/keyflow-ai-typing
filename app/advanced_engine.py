@@ -289,29 +289,70 @@ class AdvancedTypingEngine:
         slow_trans = [x["transition"] for x in analysis.get("slow_transitions", [])][:3]
 
         tokens: list[str] = []
+        vowels = ["a", "e", "i", "o", "u"]
+        consonants = ["b", "c", "d", "f", "g", "h", "k", "l", "m", "n", "p", "r", "s", "t", "w", "y"]
+        suffixes = ["ing", "ed", "er", "ly", "tion"]
+        prefixes = ["un", "re", "in", "dis", "pro"]
+
+        import time
+        random.seed(int(time.time() * 1000) % 100000)
+
         if weak_keys:
             for k in weak_keys:
-                tokens.extend([f"{k}{k}", f"a{k}a", f"e{k}e", f"in{k}", f"{k}ing", f"re{k}", f"un{k}"])
+                kl = k.lower()
+                for _ in range(4):
+                    w = random.choice(prefixes) if random.random() > 0.5 else ""
+                    w += random.choice(consonants) if kl in vowels else random.choice(vowels)
+                    w += kl
+                    w += kl if random.random() > 0.8 else ""
+                    w += random.choice(vowels) if kl in consonants else random.choice(consonants)
+                    w += random.choice(suffixes) if random.random() > 0.5 else ""
+                    tokens.append(w)
         if slow_trans:
             for t in slow_trans:
                 parts = t.split("->")
                 if len(parts) == 2:
                     p = parts[0] + parts[1]
-                    tokens.extend([p, f"{p}er", f"{p}ing", f"the{p}", f"{p}ly"])
+                    for _ in range(4):
+                        w = random.choice(prefixes) if random.random() > 0.7 else ""
+                        w += p
+                        w += random.choice(suffixes) if random.random() > 0.7 else ""
+                        tokens.append(w)
 
         if not tokens:
             tokens = ["the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "focus", "steady", "rhythm"]
 
-        random.seed(int(time.time() * 1000) % 100000)
         selected = random.choices(tokens, k=16)
         drill_text = " ".join(selected)
 
+        dashboard = analysis.get("dashboard", {})
+        acc = dashboard.get("avg_accuracy", 0)
+        sessions = dashboard.get("sessions", 0)
+        current_wpm = dashboard.get("avg_wpm", 0)
+        
+        strict_mode = False
+        blind_mode = False
+        if acc >= 98.0 and sessions >= 5:
+            if sessions % 3 == 0:
+                strict_mode = True
+            elif sessions % 4 == 0:
+                blind_mode = True
+
+        title = "Adaptive Micro-Drill"
+        if strict_mode:
+            title += " [MASTER MODE]"
+        elif blind_mode:
+            title += " [BLIND MODE]"
+
         return {
-            "title": "Adaptive Micro-Drill",
+            "title": title,
             "description": f"Targeting {', '.join(weak_keys).upper() if weak_keys else 'smooth transitions'}.",
             "focus_keys": "".join(weak_keys),
             "content": drill_text,
             "duration_minutes": 3,
+            "strict_mode": strict_mode,
+            "blind_mode": blind_mode,
+            "target_wpm": current_wpm + 5
         }
 
     def persist_analysis(self, user_id: int, analysis: dict[str, Any]) -> None:
@@ -523,5 +564,5 @@ class AdvancedTypingEngine:
             "database_size_bytes": db_size,
             "table_counts": counts,
             "agent_runs": agent_runs,
-            "version": "0.5.0",
+            "version": "3.0.0",
         }

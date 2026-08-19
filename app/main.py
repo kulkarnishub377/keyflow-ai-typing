@@ -25,7 +25,7 @@ def main() -> None:
         min_size=(1100, 720),
         resizable=True,
         background_color="#070b14",
-        confirm_close=True,
+        confirm_close=False,
     )
     api._window = window
     webview.start(debug=False)

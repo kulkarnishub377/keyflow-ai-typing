@@ -5,10 +5,10 @@
 
   <!-- Badges -->
   <p>
+    <img alt="Release Version" src="https://img.shields.io/badge/version-v3.0.0-blueviolet.svg?style=for-the-badge" />
     <img alt="Python Version" src="https://img.shields.io/badge/python-3.11+-blue.svg?style=for-the-badge&logo=python&logoColor=white" />
     <img alt="Platform" src="https://img.shields.io/badge/platform-windows%20%7C%20macOS%20%7C%20linux-lightgrey.svg?style=for-the-badge&logo=windows" />
     <img alt="Zero Cloud Dependency" src="https://img.shields.io/badge/architecture-offline--first-success.svg?style=for-the-badge" />
-    <img alt="AI Integration" src="https://img.shields.io/badge/ai-local%20Ollama%20models-orange.svg?style=for-the-badge&logo=ollama" />
   </p>
 </div>
 

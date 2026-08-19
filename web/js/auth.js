@@ -1,65 +1,91 @@
+// ==========================================================================
+// KeyFlow Authentication & Profile Setup
+// ==========================================================================
+
 function renderError(msg) {
     app.innerHTML = `
-        <main class="auth">
-            <section class="card">
-                <h2>KeyFlow could not start</h2>
-                <p class="subtitle">${esc(msg)}</p>
-            </section>
-        </main>
+        <div style="min-height:100vh;display:grid;place-items:center;padding:24px">
+            <div class="kf-card" style="max-width:480px;text-align:center">
+                <h2 style="font-family:'Outfit',sans-serif;font-size:22px;color:var(--accent-rose)">KeyFlow Startup Error</h2>
+                <p style="font-size:14px;color:var(--text-muted);margin:10px 0 16px">${esc(msg)}</p>
+                <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+            </div>
+        </div>
     `;
 }
 
 function renderAuth() {
     const isLogin = state.authMode === 'login';
     app.innerHTML = `
-        <main class="auth">
-            <section class="auth-wrap">
-                <div class="auth-left">
-                    <div class="logo-line">
-                        ${logo()}
+        <div style="min-height:100vh;display:grid;place-items:center;padding:32px">
+            <div style="width:min(940px,100%);display:grid;grid-template-columns:1.15fr 0.85fr;background:var(--surface-0);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--border-medium);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg)">
+                <div style="padding:48px;background:radial-gradient(ellipse at top left,rgba(99,102,241,0.3) 0%,transparent 65%),linear-gradient(160deg,#0a0f1d,#04060c);display:flex;flex-direction:column;justify-content:space-between;color:#ffffff">
+                    <div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+                            ${logo()}
+                        </div>
+                        <h1 style="font-family:'Outfit',sans-serif;font-size:38px;font-weight:900;letter-spacing:-0.04em;line-height:1.15;margin-bottom:14px;color:#ffffff">
+                            Build typing speed that actually lasts.
+                        </h1>
+                        <p style="font-size:14px;color:#94a3b8;line-height:1.6">
+                            A high-performance local typing studio with real-time telemetry diagnostics, adaptive curriculum planning, and zero cloud dependency.
+                        </p>
                     </div>
-                    <h1>Build typing skill that actually lasts.</h1>
-                    <p class="subtitle" style="color:#9eb0c8">
-                        A local-first typing workspace that teaches fundamentals, measures performance, 
-                        and prepares for adaptive AI coaching without requiring a cloud account.
-                    </p>
-                    <div class="auth-points">
-                        <div class="auth-point"><span class="auth-check">✓</span><span>Private local profiles and offline learning</span></div>
-                        <div class="auth-point"><span class="auth-check">✓</span><span>Immediate WPM, accuracy, and weakness feedback</span></div>
-                        <div class="auth-point"><span class="auth-check">✓</span><span>Structured path from beginner fundamentals to advanced fluency</span></div>
+
+                    <div style="display:flex;flex-direction:column;gap:12px;margin-top:32px">
+                        <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#e2e8f0">
+                            <span style="color:var(--accent-green);font-weight:900">✓</span>
+                            <span>100% Private local telemetry on your machine</span>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#e2e8f0">
+                            <span style="color:var(--accent-green);font-weight:900">✓</span>
+                            <span>Live WPM, accuracy health, and QWERTY heatmap</span>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#e2e8f0">
+                            <span style="color:var(--accent-green);font-weight:900">✓</span>
+                            <span>Adaptive multi-agent exercises targeting your exact weaknesses</span>
+                        </div>
                     </div>
                 </div>
-                <div class="auth-right">
-                    <div class="auth-tabs">
-                        <button class="button ${isLogin ? 'button-primary' : 'button-ghost'}" onclick="setAuthMode('login')">Log in</button>
-                        <button class="button ${!isLogin ? 'button-primary' : 'button-ghost'}" onclick="setAuthMode('register')">Create profile</button>
+
+                <div style="padding:42px 38px;background:var(--surface-1);display:flex;flex-direction:column;justify-content:center">
+                    <div style="display:flex;gap:6px;padding:4px;background:var(--surface-2);border-radius:var(--radius-sm);margin-bottom:24px;border:1px solid var(--border-subtle)">
+                        <button class="btn ${isLogin ? 'btn-primary' : 'btn-ghost'}" style="flex:1;padding:8px" onclick="setAuthMode('login')">Log In</button>
+                        <button class="btn ${!isLogin ? 'btn-primary' : 'btn-ghost'}" style="flex:1;padding:8px" onclick="setAuthMode('register')">Create Profile</button>
                     </div>
-                    <h2>${isLogin ? 'Welcome back' : 'Create your local profile'}</h2>
-                    <p class="subtitle">${isLogin ? 'Your training data stays on this computer.' : 'No email or cloud account is required.'}</p>
-                    
+
+                    <h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:4px">
+                        ${isLogin ? 'Welcome Back' : 'Create Local Profile'}
+                    </h2>
+                    <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:18px">
+                        ${isLogin ? 'Enter your local credentials to open your workspace.' : 'No email or internet connection required.'}
+                    </p>
+
                     <form onsubmit="event.preventDefault();submitAuth()">
-                        <div class="field">
-                            <label>Username</label>
-                            <input id="authUsername" autocomplete="username" required>
+                        <div class="form-field">
+                            <label class="form-label">Username</label>
+                            <input id="authUsername" class="form-input" autocomplete="username" placeholder="e.g. alex" required>
                         </div>
                         ${!isLogin ? `
-                        <div class="field">
-                            <label>Display name</label>
-                            <input id="authDisplay" placeholder="How KeyFlow should greet you">
+                        <div class="form-field">
+                            <label class="form-label">Display Name</label>
+                            <input id="authDisplay" class="form-input" placeholder="How KeyFlow should greet you">
                         </div>` : ''}
-                        <div class="field">
-                            <label>Password</label>
-                            <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required>
+                        <div class="form-field">
+                            <label class="form-label">Password</label>
+                            <input id="authPassword" class="form-input" type="password" autocomplete="current-password" placeholder="••••••••" minlength="6" required>
                         </div>
-                        <div class="error" id="authError"></div>
-                        <button class="button button-primary" style="width:100%;margin-top:8px">
-                            ${isLogin ? 'Enter KeyFlow' : 'Create local account'}
+                        <div id="authError" style="color:var(--accent-rose);font-size:12px;min-height:18px;margin-bottom:8px"></div>
+                        <button class="btn btn-primary" style="width:100%;padding:11px">
+                            ${isLogin ? 'Enter Workspace ➔' : 'Create Local Account ➔'}
                         </button>
                     </form>
-                    <p style="font-size:11px;color:var(--muted);margin-top:18px">Passwords are hashed locally. Core practice works without internet.</p>
+                    <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px">
+                        Passwords hashed with local Scrypt. Zero data leaves this computer.
+                    </p>
                 </div>
-            </section>
-        </main>
+            </div>
+        </div>
     `;
 }
 
@@ -73,7 +99,7 @@ async function submitAuth() {
     const p = document.getElementById('authPassword')?.value || '';
     const d = document.getElementById('authDisplay')?.value || '';
     const er = document.getElementById('authError');
-    
+
     try {
         state.user = state.authMode === 'login' ? await api('login', u, p) : await api('register', u, p, d);
         const b = await api('get_bootstrap');

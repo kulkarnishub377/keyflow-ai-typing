@@ -1,172 +1,135 @@
-(function () {
-  const STYLE = `
-    .kf-advanced-nav {
-      margin-top: 6px;
-      color: var(--muted) !important;
-      border: 1px solid rgba(99,102,241,.22) !important;
-      background: rgba(99,102,241,.06) !important;
-    }
-    .kf-advanced-nav:hover {
-      color: var(--text) !important;
-      background: rgba(99,102,241,.14) !important;
-      transform: translateX(4px);
-    }
-    .kf-modal-backdrop {
-      position: fixed; inset: 0; z-index: 999;
-      background: rgba(2, 6, 23, .72);
-      backdrop-filter: blur(12px);
-      display: grid; place-items: center; padding: 24px;
-    }
-    .kf-modal {
-      width: min(1100px, 96vw); max-height: 88vh; overflow: auto;
-      background: var(--surface-2); color: var(--text);
-      border: 1px solid var(--line-strong); border-radius: 24px;
-      box-shadow: 0 30px 80px rgba(0,0,0,.45);
-      padding: 24px;
-    }
-    .kf-modal-head { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:18px; }
-    .kf-modal-head h2 { margin:0 0 6px; font-size:26px; letter-spacing:-.03em; }
-    .kf-muted { color:var(--muted); }
-    .kf-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:16px 0; }
-    .kf-mini { padding:15px; border:1px solid var(--line); background:var(--surface); border-radius:16px; }
-    .kf-mini b { display:block; font-size:20px; margin-top:4px; }
-    .kf-section { margin-top:20px; }
-    .kf-section h3 { margin:0 0 10px; font-size:16px; }
-    .kf-table { width:100%; border-collapse:collapse; font-size:13px; }
-    .kf-table th,.kf-table td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
-    .kf-pill { display:inline-flex; align-items:center; border-radius:999px; padding:5px 9px; font-size:11px; font-weight:700; background:rgba(99,102,241,.12); border:1px solid rgba(99,102,241,.22); }
-    .kf-close { border:1px solid var(--line); background:transparent; color:var(--text); border-radius:10px; padding:9px 12px; cursor:pointer; }
-    .kf-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
-    .kf-error { padding:14px; border:1px solid rgba(244,63,94,.28); background:rgba(244,63,94,.08); border-radius:14px; color:var(--text); }
-    @media (max-width: 850px) { .kf-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 560px) { .kf-grid { grid-template-columns:1fr; } .kf-modal-backdrop{padding:10px;} .kf-modal{padding:16px;} }
-  `;
-  function installStyle() {
-    if (document.getElementById('keyflow-advanced-style')) return;
-    const s = document.createElement('style');
-    s.id = 'keyflow-advanced-style';
-    s.textContent = STYLE;
-    document.head.appendChild(s);
-  }
+// ==========================================================================
+// KeyFlow AI Copilot Lab & Developer Observability Studio
+// ==========================================================================
 
-  function addNav() {
-    const nav = document.querySelector('.nav');
-    if (!nav || nav.querySelector('.kf-advanced-nav')) return;
-    const button = document.createElement('button');
-    button.className = 'kf-advanced-nav';
-    button.type = 'button';
-    button.innerHTML = '<span class="nav-icon">◆</span><span>Developer Lab</span>';
-    button.onclick = window.openDeveloperLab;
-    nav.appendChild(button);
-  }
+async function renderCoach() {
+    let analysis = null;
+    let plan = null;
+    let dev = null;
 
-  function escHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function modal(content) {
-    const existing = document.querySelector('.kf-modal-backdrop');
-    if (existing) existing.remove();
-    const node = document.createElement('div');
-    node.className = 'kf-modal-backdrop';
-    node.innerHTML = `<section class="kf-modal" role="dialog" aria-modal="true">
-      <div class="kf-modal-head">
-        <div><h2>Developer Lab</h2><div class="kf-muted">Deep local diagnostics, adaptive planning, and agent observability.</div></div>
-        <button class="kf-close" onclick="this.closest('.kf-modal-backdrop').remove()">Close</button>
-      </div>${content}
-    </section>`;
-    node.addEventListener('click', e => { if (e.target === node) node.remove(); });
-    document.body.appendChild(node);
-  }
-
-  function metric(label, value, note='') {
-    return `<div class="kf-mini"><div class="kf-muted">${escHtml(label)}</div><b>${escHtml(value)}</b><small class="kf-muted">${escHtml(note)}</small></div>`;
-  }
-
-  async function openDeveloperLab() {
-    installStyle();
-    modal('<div class="kf-muted">Running deep local analysis…</div>');
     try {
-      const [analysis, plan, dev] = await Promise.all([
-        api('advanced_analytics'),
-        api('adaptive_plan'),
-        api('developer_snapshot')
-      ]);
-      const keys = (analysis.key_insights || []).slice(0, 8);
-      const transitions = (analysis.slow_transitions || []).slice(0, 8);
-      const history = (dev.agent_runs || []).slice(0, 8);
-
-      const html = `
-        <div class="kf-grid">
-          ${metric('Samples', analysis.sample_size, 'latest session telemetry')}
-          ${metric('Avg latency', `${analysis.latency_avg_ms} ms`, `P95 ${analysis.latency_p95_ms} ms`)}
-          ${metric('Hand balance', `${analysis.hand_balance}%`, 'higher is more balanced')}
-          ${metric('Rhythm CV', analysis.rhythm_cv, 'lower is steadier')}
-        </div>
-
-        <div class="kf-section">
-          <h3>Adaptive recommendation</h3>
-          <div class="kf-mini">
-            <div><span class="kf-pill">${escHtml(plan.objective)}</span> <span class="kf-pill">${escHtml(plan.drill_type)}</span></div>
-            <p><strong>Focus:</strong> ${escHtml((plan.focus || []).join(', ') || 'none')}</p>
-            <p><strong>Target:</strong> ${escHtml(plan.target_wpm)} WPM / ${escHtml(plan.target_accuracy)}% accuracy / ${escHtml(plan.duration_minutes)} min</p>
-            <p class="kf-muted">${escHtml(plan.reason)}</p>
-          </div>
-        </div>
-
-        <div class="kf-section">
-          <h3>Weakest key signals</h3>
-          ${keys.length ? `<table class="kf-table"><thead><tr><th>Key</th><th>Accuracy</th><th>Avg latency</th><th>P95</th><th>Finger</th></tr></thead><tbody>
-            ${keys.map(x => `<tr><td><strong>${escHtml(x.key.toUpperCase())}</strong></td><td>${escHtml(x.accuracy)}%</td><td>${escHtml(x.avg_latency_ms)} ms</td><td>${escHtml(x.p95_latency_ms)} ms</td><td>${escHtml(x.finger)}</td></tr>`).join('')}
-          </tbody></table>` : '<div class="kf-muted">Not enough telemetry yet.</div>'}
-        </div>
-
-        <div class="kf-section">
-          <h3>Slow transitions</h3>
-          ${transitions.length ? `<table class="kf-table"><thead><tr><th>Transition</th><th>Attempts</th><th>Average</th><th>P95</th></tr></thead><tbody>
-            ${transitions.map(x => `<tr><td><strong>${escHtml(x.transition)}</strong></td><td>${escHtml(x.attempts)}</td><td>${escHtml(x.avg_latency_ms)} ms</td><td>${escHtml(x.p95_latency_ms)} ms</td></tr>`).join('')}
-          </tbody></table>` : '<div class="kf-muted">Not enough transition history yet.</div>'}
-        </div>
-
-        <div class="kf-section">
-          <h3>Agent execution history</h3>
-          ${history.length ? `<table class="kf-table"><thead><tr><th>Run</th><th>Status</th><th>Duration</th><th>Confidence</th><th>Created</th></tr></thead><tbody>
-            ${history.map(x => `<tr><td>${escHtml(x.run_type)}</td><td>${escHtml(x.status)}</td><td>${escHtml(x.duration_ms)} ms</td><td>${Math.round(Number(x.confidence || 0)*100)}%</td><td>${escHtml(x.created_at)}</td></tr>`).join('')}
-          </tbody></table>` : '<div class="kf-muted">No agent runs recorded yet.</div>'}
-        </div>
-
-        <div class="kf-actions">
-          <button class="button button-primary" onclick="window.runDeepCoachFromLab()">Run deep coach</button>
-          <button class="button button-ghost" onclick="window.openPerformanceSnapshot()">Refresh analytics</button>
-          <button class="button button-ghost" onclick="document.querySelector('.kf-modal-backdrop')?.remove();window.startAdaptiveDrill();">Launch Procedural Drill</button>
-        </div>
-      `;
-      modal(html);
+        [analysis, plan, dev] = await Promise.all([
+            api('advanced_analytics'),
+            api('adaptive_plan'),
+            api('developer_snapshot')
+        ]);
     } catch (e) {
-      modal(`<div class="kf-error">${escHtml(e?.message || e)}</div>`);
+        console.error("Failed to load developer studio snapshot", e);
     }
-  }
 
-  async function runDeepCoachFromLab() {
+    const c = state.coach;
+    const msg = c?.summary || 'Run the multi-agent pipeline to generate structured local advice.';
+    
+    let traceHtml = '<div class="empty" style="padding:16px;font-size:12.5px">Run the coach to inspect the live 10-agent execution trace.</div>';
+    if (c?.trace && c.trace.length > 0) {
+        traceHtml = c.trace.map(x => `
+            <div style="padding:10px 14px;background:var(--surface-2);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-weight:800;font-size:13.5px">${esc(x.agent.replaceAll('_', ' '))}</span>
+                    <span class="badge ${x.status === 'ok' ? 'badge-success' : 'badge-warning'}" style="font-size:10px">${esc(x.status)}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span class="kbd" style="font-size:11px">${Math.round((x.confidence || 0) * 100)}% conf</span>
+                    <span style="font-size:11.5px;color:var(--text-muted)">${esc((x.evidence || []).join(' • '))}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    const content = `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+                <h1 style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:800">AI Copilot & Observability Studio</h1>
+                <p style="font-size:13px;color:var(--text-muted)">Deep local telemetry diagnostics, adaptive curriculum planning, and multi-agent audit traces.</p>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary" onclick="renderCoach()">↺ Refresh Telemetry</button>
+                <button class="btn btn-primary" onclick="runCoach()">✦ Execute Multi-Agent Pipeline</button>
+            </div>
+        </div>
+
+        ${copilotCard()}
+
+        ${analysis ? `
+            <div class="stats-grid">
+                ${statTile('Hand Balance', `${analysis.hand_balance ? analysis.hand_balance.toFixed(1) : '50.0'}% <small style="font-size:11px;color:var(--text-muted)">L/R ratio</small>`, 'QWERTY hand distribution', 'Calculated across left vs right hand key strokes')}
+                ${statTile('Rhythm Variance', `${analysis.rhythm_cv ? analysis.rhythm_cv.toFixed(3) : '0.000'} <small style="font-size:11px;color:var(--text-muted)">CV score</small>`, 'Consistency index', 'Lower indicates higher metronomic rhythm')}
+                ${statTile('Average Latency', `${analysis.latency_avg_ms ? Math.round(analysis.latency_avg_ms) : 0} <small style="font-size:11px;color:var(--text-muted)">ms</small>`, 'Key stroke latency', 'Mean keystroke interval')}
+                ${statTile('P95 Latency', `${analysis.latency_p95_ms ? Math.round(analysis.latency_p95_ms) : 0} <small style="font-size:11px;color:var(--text-muted)">ms</small>`, '95th percentile hesitation', 'Upper bound key hesitation')}
+            </div>
+        ` : ''}
+
+        ${plan ? `
+            <div class="kf-card">
+                <div class="kf-card-header">
+                    <div>
+                        <div class="kf-card-title">Adaptive Curriculum Target</div>
+                        <div class="kf-card-subtitle">Procedurally calculated for your current skill level</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="startAdaptiveDrill()">Launch Target Drill ➔</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:12px;background:var(--surface-2);border-radius:var(--radius-md);border:1px solid var(--border-subtle)">
+                    <div>
+                        <div style="font-size:12px;color:var(--text-muted);font-weight:700">OBJECTIVE</div>
+                        <div style="font-size:16px;font-weight:800;margin-top:2px">${esc(plan.objective || 'Fluency')}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;color:var(--text-muted);font-weight:700">TARGET WPM & ACCURACY</div>
+                        <div style="font-size:16px;font-weight:800;margin-top:2px">${plan.target_wpm || 60} WPM • ${plan.target_accuracy || 97}% Acc</div>
+                    </div>
+                </div>
+                <p style="font-size:13px;color:var(--text-muted);margin-top:12px;line-height:1.5">${esc(plan.reason || '')}</p>
+            </div>
+        ` : ''}
+
+        <div class="kf-card">
+            <div class="kf-card-header">
+                <div>
+                    <div class="kf-card-title">10-Agent Pipeline Audit Trace</div>
+                    <div class="kf-card-subtitle">Deterministic multi-agent execution results</div>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                ${traceHtml}
+            </div>
+        </div>
+
+        ${dev ? `
+            <div class="kf-card">
+                <div class="kf-card-header">
+                    <div>
+                        <div class="kf-card-title">Local SQLite Telemetry Vault</div>
+                        <div class="kf-card-subtitle">Local database tables and storage metrics</div>
+                    </div>
+                    <span class="badge badge-success">Engine v${esc(dev.version || '0.5.0')}</span>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    ${Object.entries(dev.table_counts || {}).map(([tbl, cnt]) => `
+                        <div style="padding:8px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border-subtle);font-size:12px">
+                            <span style="color:var(--text-muted)">${tbl}:</span> <b>${cnt} rows</b>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    app.innerHTML = layout(content, 'AI Copilot Lab', 'Multi-agent orchestration, diagnostics, and local audit traces.');
+}
+
+async function runCoach() {
     try {
-      const result = await api('ai_coach');
-      toast(`Coach complete • ${Math.round((result.confidence_floor || 0)*100)}% confidence`);
-      openDeveloperLab();
+        toast('Executing local multi-agent diagnostic pipeline...');
+        const result = await api('ai_coach');
+        if (result.status === 'ok') {
+            state.coach = result;
+            toast('AI Coaching advice generated.');
+            if (state.route === 'coach') renderCoach();
+            else if (state.route === 'dashboard') renderDashboard();
+        } else {
+            toast('Coaching pipeline blocked: ' + JSON.stringify(result));
+        }
     } catch (e) {
-      toast(e?.message || String(e));
+        toast(e.message || String(e));
     }
-  }
-
-  async function openPerformanceSnapshot() {
-    openDeveloperLab();
-  }
-
-  window.openDeveloperLab = openDeveloperLab;
-  window.runDeepCoachFromLab = runDeepCoachFromLab;
-  window.openPerformanceSnapshot = openPerformanceSnapshot;
-
-  installStyle();
-  const observer = new MutationObserver(addNav);
-  observer.observe(document.body, { childList: true, subtree: true });
-  setTimeout(addNav, 250);
-})();
+}

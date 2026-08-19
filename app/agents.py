@@ -134,44 +134,76 @@ class CurriculumPlanner(Agent):
             mode = "timed_fluency"
             minutes = 10
             
+        strict_mode = False
+        blind_mode = False
+        if perf.get("avg_accuracy", 0) >= 98.0 and int(dashboard.get("sessions", 0)) >= 5:
+            if int(dashboard.get("sessions", 0)) % 3 == 0:
+                strict_mode = True
+            elif int(dashboard.get("sessions", 0)) % 4 == 0:
+                blind_mode = True
+
         return AgentResult(
             self.name,
             "ok",
             0.89,
-            {"mode": mode, "minutes": minutes, "focus_keys": unmastered_keys[:3]},
+            {
+                "mode": mode, 
+                "minutes": minutes, 
+                "focus_keys": unmastered_keys[:3],
+                "strict_mode": strict_mode,
+                "blind_mode": blind_mode
+            },
             [f"learner_state={state}", f"focus_keys={','.join(unmastered_keys[:3]) or 'none'}"],
         )
 
 
 class ExerciseGenerator(Agent):
     name = "exercise_generator"
-    required_inputs = ("plan", "weaknesses")
+    required_inputs = ("plan", "weaknesses", "dashboard")
 
     def run(self, context: dict[str, Any]) -> AgentResult:
         plan = context["plan"]
         weak = context["weaknesses"]
+        dashboard = context["dashboard"]
         mode = plan.get("mode", "timed_fluency")
         focus_keys = plan.get("focus_keys", [])
         slow_digraphs = weak.get("slow_digraphs", [])
 
-        # Procedural targeted drill generation
+        sessions_count = int(dashboard.get("sessions", 0))
+        random.seed(42 + sessions_count)
+
         drill_words = []
+        vowels = ["a", "e", "i", "o", "u"]
+        consonants = ["b", "c", "d", "f", "g", "h", "k", "l", "m", "n", "p", "r", "s", "t", "w", "y"]
+        suffixes = ["ing", "ed", "er", "ly", "tion"]
+        prefixes = ["un", "re", "in", "dis", "pro"]
+
         if focus_keys:
             for k in focus_keys:
                 kl = k.lower()
-                patterns = [f"{kl}{kl}", f"a{kl}a", f"e{kl}e", f"in{kl}", f"{kl}ing", f"{kl}or", f"un{kl}"]
-                drill_words.extend(patterns)
+                for _ in range(4):
+                    w = random.choice(prefixes) if random.random() > 0.5 else ""
+                    w += random.choice(consonants) if kl in vowels else random.choice(vowels)
+                    w += kl
+                    w += kl if random.random() > 0.8 else ""
+                    w += random.choice(vowels) if kl in consonants else random.choice(consonants)
+                    w += random.choice(suffixes) if random.random() > 0.5 else ""
+                    drill_words.append(w)
         elif slow_digraphs:
             for d in slow_digraphs:
                 parts = d.split("->")
                 if len(parts) == 2:
                     p = parts[0] + parts[1]
-                    drill_words.extend([f"{p}", f"the{p}", f"{p}ing", f"{p}er", f"re{p}"])
+                    for _ in range(4):
+                        w = random.choice(prefixes) if random.random() > 0.7 else ""
+                        w += p
+                        w += random.choice(suffixes) if random.random() > 0.7 else ""
+                        drill_words.append(w)
         else:
             drill_words = ["the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "focus", "rhythm"]
 
-        random.seed(42)  # Deterministic seed for reproducible drill outputs
-        selected = (drill_words * 4)[:12]
+        random.shuffle(drill_words)
+        selected = (drill_words * 3)[:12]
         generated_text = " ".join(selected)
 
         return AgentResult(

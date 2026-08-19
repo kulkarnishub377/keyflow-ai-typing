@@ -141,3 +141,9 @@ class API:
         if not result:
             return {"path": None}
         return {"path": result[0]}
+
+    def exit_app(self) -> bool:
+        if self._window:
+            self._window.destroy()
+        return True
+
