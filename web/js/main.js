@@ -18,9 +18,9 @@ function render() {
 }
 
 function go(route) {
-    if (arcadeGame) {
-        arcadeGame.destroy();
-        arcadeGame = null;
+    if (typeof activeArcadeGame !== 'undefined' && activeArcadeGame) {
+        activeArcadeGame.destroy();
+        activeArcadeGame = null;
     }
     state.route = route;
     render();
@@ -34,7 +34,8 @@ window.startLesson = typeof startLesson === 'function' ? startLesson : () => {};
 window.finishPractice = typeof finishPractice === 'function' ? finishPractice : () => {};
 window.resetPractice = typeof resetPractice === 'function' ? resetPractice : () => {};
 window.renderArcade = typeof renderArcade === 'function' ? renderArcade : () => {};
-window.startArcadeGame = typeof startArcadeGame === 'function' ? startArcadeGame : () => {};
+window.launchArcadeMode = typeof launchArcadeMode === 'function' ? launchArcadeMode : () => {};
+window.startCurrentArcadeGame = typeof startCurrentArcadeGame === 'function' ? startCurrentArcadeGame : () => {};
 window.runCoach = typeof runCoach === 'function' ? runCoach : () => {};
 window.saveSettings = typeof saveSettings === 'function' ? saveSettings : () => {};
 window.backup = typeof backup === 'function' ? backup : () => {};

@@ -1609,3 +1609,123 @@ a {
   animation: popIn 0.25s var(--ease-spring);
 }
 
+/* ==========================================================================
+   Multi-Game Arcade Hub Grid & Mode Cards
+   ========================================================================== */
+.arcade-hub-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.arcade-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.arcade-mode-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s var(--ease-spring);
+  box-shadow: var(--shadow-sm);
+}
+
+.arcade-mode-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--brand-light);
+  box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 102, 241, 0.2);
+}
+
+.arcade-mode-card.active-mode {
+  border-color: var(--brand);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, var(--surface-1) 100%);
+}
+
+.arcade-mode-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.arcade-mode-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.3);
+}
+
+.arcade-mode-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.arcade-mode-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.arcade-mode-desc {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.arcade-mode-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 18px;
+}
+
+.arcade-mode-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.arcade-mode-stat-lbl {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.arcade-mode-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brand-light);
+  margin-top: 2px;
+}
+
+.arcade-mode-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+

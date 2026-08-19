@@ -245,6 +245,54 @@ function playEmpSound() {
     } catch (e) {}
 }
 
+function playNitroBoostSound() {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const now = ctx.currentTime;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(680, now + 0.35);
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc.start(now);
+        osc.stop(now + 0.35);
+    } catch (e) {}
+}
+
+function playCrystalShatterSound() {
+    if (state.settings?.sound_enabled === 'off') return;
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        [880, 1174.66, 1760, 2349.32].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            const now = ctx.currentTime + i * 0.03;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+            osc.start(now);
+            osc.stop(now + 0.12);
+        });
+    } catch (e) {}
+}
+
 function playWaveVictorySound() {
     if (state.settings?.sound_enabled === 'off') return;
     try {
