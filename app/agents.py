@@ -350,12 +350,14 @@ class PrivacyGuard(Agent):
     required_inputs = ("performance", "weaknesses", "plan", "coach")
 
     def run(self, context: dict[str, Any]) -> AgentResult:
+        from .security import PrivacyGuard as PIIFilter
+
         p = context["performance"]
         w = context["weaknesses"]
         plan = context["plan"]
         coach = context["coach"]
 
-        safe_context = {
+        raw_context = {
             "state": p.get("state"),
             "wpm": p.get("avg_wpm"),
             "accuracy": p.get("avg_accuracy"),
@@ -365,7 +367,8 @@ class PrivacyGuard(Agent):
             "plan_minutes": plan.get("minutes"),
             "deterministic_advice": coach.get("message"),
         }
-        return AgentResult(self.name, "ok", 1.0, {"safe_context": safe_context}, ["PII stripped"])
+        safe_context = PIIFilter.scrub_context(raw_context)
+        return AgentResult(self.name, "ok", 1.0, {"safe_context": safe_context}, ["Zero-trust PII stripped"])
 
 
 class LLMCoach(Agent):
