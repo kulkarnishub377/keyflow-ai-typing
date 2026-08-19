@@ -328,11 +328,11 @@ class ArcadeEngine {
         this.errorMap = {};
         this.timingBlob = [];
 
-        this.waveTotalShips = 6;
+        this.waveTotalShips = 14; // Generous battle size per wave
         this.waveSpawnedCount = 0;
         this.waveDestroyedCount = 0;
         this.lastSpawnTime = performance.now();
-        this.spawnInterval = 2200;
+        this.spawnInterval = 2000;
 
         this.initStars();
         this.setupKeyboard();
@@ -353,7 +353,7 @@ class ArcadeEngine {
 
     spawnShip() {
         const weakKeys = (state.dashboard?.weak_keys || []).map(x => x.expected_key.toLowerCase());
-        const activeInitialLetters = new Set(this.ships.map(s => s.word[0]));
+        const activeInitialLetters = new Set(this.ships.map(s => s.word[0].toLowerCase()));
         const isBoss = this.waveSpawnedCount === this.waveTotalShips - 1 && this.wave % 3 === 0;
 
         let rawWord = selectArcadeWord(this.wave, isBoss, activeInitialLetters, weakKeys);
@@ -361,18 +361,19 @@ class ArcadeEngine {
 
         const margin = 110;
         const x = Math.random() * (this.canvas.width - margin * 2) + margin;
-        const speed = (26 + this.wave * 4.2) * (isBoss ? 0.55 : 1);
+        const speed = (22 + this.wave * 2.8) * (isBoss ? 0.55 : 1);
 
         this.ships.push({
             id: Math.random().toString(),
             word: word,
             typedIndex: 0,
             x: x,
-            y: -20,
+            y: -24,
             speed: speed,
             isBoss: isBoss,
             hue: isBoss ? 340 : (Math.random() > 0.5 ? 240 : (Math.random() > 0.5 ? 180 : 280)),
-            size: isBoss ? 28 : 18
+            size: isBoss ? 28 : 18,
+            errorFlash: 0
         });
 
         this.waveSpawnedCount++;
@@ -392,26 +393,38 @@ class ArcadeEngine {
                 return;
             }
 
+            // Escape or Backspace to release current target lock
+            if (e.code === 'Escape' || e.code === 'Backspace') {
+                if (this.activeTarget) {
+                    const ship = this.ships.find(s => s.id === this.activeTarget);
+                    if (ship) ship.typedIndex = 0;
+                    this.activeTarget = null;
+                    this.updateHUD();
+                }
+                return;
+            }
+
             if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
-            const char = e.key; // preserve exact case (tests Shift key on capitals)
+            const char = e.key;
             const now = performance.now();
             const latency = this.lastKeyTime ? now - this.lastKeyTime : 0;
             this.lastKeyTime = now;
             this.totalKeystrokes++;
 
-            // If we have an active target
+            // If we have an active locked target
             if (this.activeTarget) {
                 const ship = this.ships.find(s => s.id === this.activeTarget);
                 if (ship) {
                     const expected = ship.word[ship.typedIndex];
-                    if (char === expected) {
+                    // Case-tolerant matching so player is never stuck
+                    if (char === expected || char.toLowerCase() === expected.toLowerCase()) {
                         this.hitCharacter(ship);
                         this.correctKeystrokes++;
                         this.timingBlob.push({ key: char, latency, timestamp: now });
                         return;
                     } else {
-                        // Typo on active ship (including case mismatch)
-                        this.missCharacter(expected, char);
+                        // Missed on active target: record error and flash red, BUT KEEP TARGET LOCKED
+                        this.missCharacter(expected, char, ship);
                         return;
                     }
                 } else {
@@ -419,17 +432,10 @@ class ArcadeEngine {
                 }
             }
 
-            // Find closest candidate starting with char (case-sensitive)
-            let candidates = this.ships
-                .filter(s => s.word[0] === char)
+            // Find closest candidate starting with char (case-tolerant)
+            const candidates = this.ships
+                .filter(s => s.word[0] === char || s.word[0].toLowerCase() === char.toLowerCase())
                 .sort((a, b) => b.y - a.y); // nearest to base
-
-            // Fallback to case-insensitive match on first letter if no exact match found
-            if (candidates.length === 0) {
-                candidates = this.ships
-                    .filter(s => s.word[0].toLowerCase() === char.toLowerCase())
-                    .sort((a, b) => b.y - a.y);
-            }
 
             if (candidates.length > 0) {
                 const target = candidates[0];
@@ -438,7 +444,7 @@ class ArcadeEngine {
                 this.correctKeystrokes++;
                 this.timingBlob.push({ key: char, latency, timestamp: now });
             } else {
-                this.missCharacter('?', char);
+                this.missCharacter('?', char, null);
             }
         };
 
@@ -447,12 +453,13 @@ class ArcadeEngine {
 
     hitCharacter(ship) {
         ship.typedIndex++;
+        ship.errorFlash = 0;
         this.streak++;
         this.maxStreak = Math.max(this.maxStreak, this.streak);
         this.empCharge = Math.min(10, this.empCharge + 1);
 
         const multiplier = 1 + Math.min(4, Math.floor(this.streak / 6));
-        this.score += 50 * multiplier;
+        this.score += 75 * multiplier;
 
         // Laser beam FX from turret to ship
         const turretX = this.canvas.width / 2;
@@ -479,19 +486,23 @@ class ArcadeEngine {
         this.updateHUD();
     }
 
-    missCharacter(expected, actual) {
+    missCharacter(expected, actual, ship = null) {
         this.streak = 0;
         this.errorCount++;
         this.errorMap[expected] = (this.errorMap[expected] || 0) + 1;
-        this.activeTarget = null; // drop lock
-        playShieldDamageSound();
+        
+        if (ship) {
+            ship.errorFlash = 1.0; // Flash red on missed character
+        }
+        
+        playKeySound('beep');
         this.updateHUD();
     }
 
     destroyShip(ship) {
         this.activeTarget = null;
         this.waveDestroyedCount++;
-        this.score += ship.word.length * 100 * (1 + Math.min(4, Math.floor(this.streak / 6)));
+        this.score += ship.word.length * 120 * (1 + Math.min(4, Math.floor(this.streak / 6)));
 
         // Big particle explosion
         this.addParticles(ship.x, ship.y, ship.isBoss ? 50 : 22, ship.hue);
@@ -500,6 +511,12 @@ class ArcadeEngine {
 
         if (this.streak % 5 === 0) {
             playComboChime(Math.min(5, Math.floor(this.streak / 5)));
+        }
+
+        // Restore 1 shield cell on 20-word streak
+        if (this.streak > 0 && this.streak % 20 === 0 && this.shields < 3) {
+            this.shields++;
+            toast('🛡️ Shield Cell Restored!');
         }
 
         this.ships = this.ships.filter(s => s.id !== ship.id);
@@ -521,7 +538,7 @@ class ArcadeEngine {
         });
         const destroyed = this.ships.filter(s => !s.isBoss);
         this.waveDestroyedCount += destroyed.length;
-        this.score += destroyed.length * 250;
+        this.score += destroyed.length * 300;
         this.ships = this.ships.filter(s => s.isBoss);
         this.activeTarget = null;
 
@@ -535,10 +552,10 @@ class ArcadeEngine {
         this.wave++;
         this.waveSpawnedCount = 0;
         this.waveDestroyedCount = 0;
-        this.waveTotalShips = Math.min(18, 5 + Math.floor(this.wave * 1.5));
-        this.spawnInterval = Math.max(750, 2300 - this.wave * 120);
+        this.waveTotalShips = 14 + (this.wave - 1) * 4;
+        this.spawnInterval = Math.max(800, 2000 - this.wave * 100);
 
-        // Restore 1 shield cell if depleted
+        // Restore 1 shield cell on wave victory
         if (this.shields < 3) this.shields++;
 
         playWaveVictorySound();
@@ -563,7 +580,6 @@ class ArcadeEngine {
 
     damageShield() {
         this.shields--;
-        this.activeTarget = null;
         this.screenShake = 14;
         playShieldDamageSound();
         this.updateHUD();
@@ -613,9 +629,13 @@ class ArcadeEngine {
     update() {
         const now = performance.now();
 
-        // Spawn logic
-        if (this.waveSpawnedCount < this.waveTotalShips && now - this.lastSpawnTime > this.spawnInterval) {
-            this.spawnShip();
+        // Continuous smooth spawning: spawn if timer expired OR if screen is empty
+        const maxConcurrent = Math.min(8, 3 + Math.floor(this.wave * 0.5));
+        const interval = Math.max(900, 2000 - this.wave * 100);
+        if (this.waveSpawnedCount < this.waveTotalShips && (now - this.lastSpawnTime > interval || this.ships.length < 2)) {
+            if (this.ships.length < maxConcurrent) {
+                this.spawnShip();
+            }
         }
 
         // Update ships
@@ -625,6 +645,9 @@ class ArcadeEngine {
             if (s.y >= baseLine) {
                 // Ship breached defense
                 this.addParticles(s.x, baseLine, 20, 0);
+                if (this.activeTarget === s.id) {
+                    this.activeTarget = null;
+                }
                 this.damageShield();
                 s.dead = true;
             }
@@ -726,12 +749,21 @@ class ArcadeEngine {
             this.ctx.translate(ship.x, ship.y);
 
             // Capsule body
-            this.ctx.fillStyle = `hsla(${ship.hue}, 80%, 20%, 0.85)`;
-            this.ctx.strokeStyle = isTargeted ? '#ffffff' : `hsla(${ship.hue}, 100%, 65%, 0.9)`;
-            this.ctx.lineWidth = isTargeted ? 2.5 : 1.5;
-            if (isTargeted) {
-                this.ctx.shadowColor = '#6366f1';
-                this.ctx.shadowBlur = 12;
+            if (ship.errorFlash > 0) {
+                ship.errorFlash -= 0.04;
+                this.ctx.fillStyle = 'rgba(244, 63, 94, 0.45)';
+                this.ctx.strokeStyle = '#f43f5e';
+                this.ctx.lineWidth = 3;
+                this.ctx.shadowColor = '#f43f5e';
+                this.ctx.shadowBlur = 18;
+            } else {
+                this.ctx.fillStyle = `hsla(${ship.hue}, 80%, 20%, 0.85)`;
+                this.ctx.strokeStyle = isTargeted ? '#ffffff' : `hsla(${ship.hue}, 100%, 65%, 0.9)`;
+                this.ctx.lineWidth = isTargeted ? 2.5 : 1.5;
+                if (isTargeted) {
+                    this.ctx.shadowColor = '#6366f1';
+                    this.ctx.shadowBlur = 12;
+                }
             }
 
             const charWidth = 12;
