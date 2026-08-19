@@ -41,6 +41,8 @@ window.backup = typeof backup === 'function' ? backup : () => {};
 window.toggleTheme = typeof toggleTheme === 'function' ? toggleTheme : () => {};
 window.logout = typeof logout === 'function' ? logout : () => {};
 window.showCustomLessonModal = typeof showCustomLessonModal === 'function' ? showCustomLessonModal : () => {};
+window.closeCustomLessonModal = typeof closeCustomLessonModal === 'function' ? closeCustomLessonModal : () => {};
+window.submitCustomLessonForm = typeof submitCustomLessonForm === 'function' ? submitCustomLessonForm : () => {};
 window.createCustomLesson = typeof createCustomLesson === 'function' ? createCustomLesson : () => {};
 window.deleteCustomLesson = typeof deleteCustomLesson === 'function' ? deleteCustomLesson : () => {};
 window.inspectHeatmapKey = typeof inspectHeatmapKey === 'function' ? inspectHeatmapKey : () => {};

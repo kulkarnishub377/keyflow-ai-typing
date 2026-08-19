@@ -241,37 +241,109 @@ function startLesson(id) {
 }
 
 function showCustomLessonModal() {
-    const title = prompt('Enter custom drill title:');
-    if (!title) return;
-    const content = prompt('Enter text passage to practice:');
-    if (!content) return;
-    const focus = prompt('Enter focus keys (optional, e.g. "th, er"):') || '';
-    const mins = Number(prompt('Duration in minutes (e.g. 5):') || 5);
+    const el = document.getElementById('customLessonModal');
+    if (!el) return;
+    el.style.display = 'flex';
+    el.innerHTML = `
+        <div class="cmd-palette-modal" style="max-width:620px;padding:32px 28px" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:24px">★</span>
+                    <div>
+                        <h2 style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.02em">
+                            Create Custom Practice Drill
+                        </h2>
+                        <p style="font-size:12.5px;color:var(--text-muted)">Craft a tailored drill or import code/text to practice locally.</p>
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="closeCustomLessonModal()" style="font-size:18px">✕</button>
+            </div>
 
-    createCustomLesson(title, content, focus, mins);
+            <form onsubmit="event.preventDefault();submitCustomLessonForm()">
+                <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:14px">
+                    <div class="form-field">
+                        <label class="form-label">Drill Title</label>
+                        <input id="customTitle" class="form-input" placeholder="e.g. Python Async/Await Patterns" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Focus Keys (Optional)</label>
+                        <input id="customFocus" class="form-input" placeholder="e.g. async, await, def">
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <label class="form-label">Practice Text Passage / Code Block</label>
+                        <span id="charCountLabel" style="font-size:11px;color:var(--text-muted)">0 chars</span>
+                    </div>
+                    <textarea id="customContent" class="form-input font-mono" rows="6" placeholder="Paste or type your custom drill passage here..." required style="resize:vertical;line-height:1.6" oninput="document.getElementById('charCountLabel').textContent = this.value.length + ' chars'"></textarea>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <label class="form-label" style="margin:0">Duration:</label>
+                        <select id="customDuration" class="form-select" style="width:auto;padding:6px 12px">
+                            <option value="2">2 Minutes</option>
+                            <option value="5" selected>5 Minutes</option>
+                            <option value="10">10 Minutes</option>
+                            <option value="15">15 Minutes</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <button type="button" class="btn btn-secondary" onclick="closeCustomLessonModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save & Launch Drill ➔</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    `;
+    setTimeout(() => document.getElementById('customTitle')?.focus(), 50);
 }
 
-async function createCustomLesson(title, content, focus, mins) {
+function closeCustomLessonModal() {
+    const el = document.getElementById('customLessonModal');
+    if (el) el.style.display = 'none';
+}
+
+async function submitCustomLessonForm() {
+    const title = document.getElementById('customTitle')?.value.trim();
+    const content = document.getElementById('customContent')?.value.trim();
+    const focus = document.getElementById('customFocus')?.value.trim() || '';
+    const mins = Number(document.getElementById('customDuration')?.value || 5);
+
+    if (!title || !content) {
+        toast('Please provide a title and passage.');
+        return;
+    }
+
     try {
-        await api('create_custom_lesson', title, content, focus, mins);
+        const result = await api('create_custom_lesson', title, content, focus, mins);
+        closeCustomLessonModal();
         state.progress = await api('progress');
         const b = await api('get_bootstrap');
         state.lessons = b.lessons || [];
         toast('Custom drill created successfully.');
-        renderLearn();
+        
+        // Auto-launch the newly created drill
+        const created = state.progress.find(x => x.id === result?.id) || state.lessons.find(x => x.title === title);
+        if (created) {
+            state.selectedLesson = created;
+            go('practice');
+        } else {
+            renderLearn();
+        }
     } catch (e) {
         toast(e.message || String(e));
     }
 }
 
 async function deleteCustomLesson(id) {
-    if (!confirm('Are you sure you want to delete this custom drill?')) return;
     try {
         await api('delete_custom_lesson', id);
         state.progress = await api('progress');
         const b = await api('get_bootstrap');
         state.lessons = b.lessons || [];
-        toast('Custom drill deleted.');
+        toast('Custom drill removed from library.');
         if (state.route === 'practice') go('learn');
         else renderLearn();
     } catch (e) {
