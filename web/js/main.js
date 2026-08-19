@@ -36,6 +36,8 @@ window.resetPractice = typeof resetPractice === 'function' ? resetPractice : () 
 window.renderArcade = typeof renderArcade === 'function' ? renderArcade : () => {};
 window.launchArcadeMode = typeof launchArcadeMode === 'function' ? launchArcadeMode : () => {};
 window.startCurrentArcadeGame = typeof startCurrentArcadeGame === 'function' ? startCurrentArcadeGame : () => {};
+window.restartFromGameOver = typeof restartFromGameOver === 'function' ? restartFromGameOver : () => {};
+window.adjustActiveGameStage = typeof adjustActiveGameStage === 'function' ? adjustActiveGameStage : () => {};
 window.runCoach = typeof runCoach === 'function' ? runCoach : () => {};
 window.saveSettings = typeof saveSettings === 'function' ? saveSettings : () => {};
 window.backup = typeof backup === 'function' ? backup : () => {};

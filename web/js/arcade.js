@@ -72,8 +72,15 @@ function renderArcade() {
                             <span class="badge badge-warning">EMP Blast</span>
                             <span class="badge badge-purple">Weak-Key Armada</span>
                         </div>
+                        <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center">
+                            <span style="font-size:11px;font-weight:800;color:var(--text-muted)">STAGE:</span>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('defense', 1)">1</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('defense', 3)">3</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('defense', 5)">5</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('defense', 8)">8</button>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="launchArcadeMode('defense')">
+                    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="launchArcadeMode('defense', 1)">
                         ⚡ Launch Orbital Defense
                     </button>
                 </div>
@@ -106,8 +113,15 @@ function renderArcade() {
                             <span class="badge badge-success">Nitro Boost</span>
                             <span class="badge badge-purple">Time Attack</span>
                         </div>
+                        <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center">
+                            <span style="font-size:11px;font-weight:800;color:var(--text-muted)">SECTOR:</span>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('velocity', 1)">1</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('velocity', 3)">3</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('velocity', 5)">5</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('velocity', 8)">8</button>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" style="width:100%;justify-content:center;background:linear-gradient(135deg,#06b6d4,#3b82f6)" onclick="launchArcadeMode('velocity')">
+                    <button class="btn btn-primary" style="width:100%;justify-content:center;background:linear-gradient(135deg,#06b6d4,#3b82f6)" onclick="launchArcadeMode('velocity', 1)">
                         🏎️ Launch Cyber Velocity
                     </button>
                 </div>
@@ -140,8 +154,15 @@ function renderArcade() {
                             <span class="badge badge-success">Chain Multipliers</span>
                             <span class="badge badge-warning">Meltdown Meter</span>
                         </div>
+                        <div style="display:flex;gap:6px;margin-bottom:14px;align-items:center">
+                            <span style="font-size:11px;font-weight:800;color:var(--text-muted)">LEVEL:</span>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('cascade', 1)">1</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('cascade', 3)">3</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('cascade', 5)">5</button>
+                            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;font-size:11px" onclick="launchArcadeMode('cascade', 8)">8</button>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" style="width:100%;justify-content:center;background:linear-gradient(135deg,#10b981,#059669)" onclick="launchArcadeMode('cascade')">
+                    <button class="btn btn-primary" style="width:100%;justify-content:center;background:linear-gradient(135deg,#10b981,#059669)" onclick="launchArcadeMode('cascade', 1)">
                         🧱 Launch Cascade Reactor
                     </button>
                 </div>
@@ -152,7 +173,7 @@ function renderArcade() {
     app.innerHTML = layout(content, 'Arcade Matrix', 'High-adrenaline cyber typing combat simulations.');
 }
 
-function launchArcadeMode(mode) {
+function launchArcadeMode(mode, initialLevel = 1) {
     currentArcadeMode = mode;
 
     let modeTitle = 'ORBITAL DEFENSE';
@@ -169,14 +190,18 @@ function launchArcadeMode(mode) {
         <div class="arcade-studio-layout">
             <div class="arcade-hud-bar">
                 <div class="arcade-hud-left">
-                    <button class="btn btn-secondary btn-sm" onclick="renderArcade()" style="margin-right:12px;padding:6px 12px">
-                        ↺ Exit to Hub
+                    <button class="btn btn-secondary btn-sm" onclick="renderArcade()" style="margin-right:10px;padding:6px 12px">
+                        ↺ Hub
                     </button>
                     <div class="arcade-title-tag">
                         <span class="pulse-radar"></span> ${modeIcon} ${modeTitle}
                     </div>
-                    <div class="arcade-wave-pill" id="arcadeWaveDisplay">
-                        ${mode === 'velocity' ? 'SECTOR 1' : (mode === 'cascade' ? 'LEVEL 1' : 'WAVE 1')}
+                    <div style="display:flex;align-items:center;gap:4px;margin-left:8px">
+                        <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px" onclick="adjustActiveGameStage(-1)" title="Previous Stage">◀</button>
+                        <div class="arcade-wave-pill" id="arcadeWaveDisplay">
+                            ${mode === 'velocity' ? 'SECTOR 1' : (mode === 'cascade' ? 'LEVEL 1' : 'WAVE 1')}
+                        </div>
+                        <button class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px" onclick="adjustActiveGameStage(1)" title="Next Stage">▶</button>
                     </div>
                 </div>
 
@@ -214,14 +239,15 @@ function launchArcadeMode(mode) {
             <div class="arcade-canvas-wrapper" id="arcadeCanvasWrapper">
                 <canvas id="arcadeCanvas"></canvas>
                 
+                <!-- Start Overlay Modal -->
                 <div class="arcade-overlay-start" id="arcadeStartOverlay">
-                    <div class="arcade-modal-card" style="max-width:520px;padding:32px 28px">
+                    <div class="arcade-modal-card" style="max-width:540px;padding:32px 28px">
                         <div style="font-size:44px;margin-bottom:8px">${modeIcon}</div>
                         <h1 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;letter-spacing:-0.03em">
                             ${modeTitle}
                         </h1>
                         <p style="font-size:13.5px;color:var(--text-muted);margin:8px 0 16px;line-height:1.5">
-                            ${mode === 'velocity' ? 'Type the words on approaching lane gates to turbo-drift, smash barriers, and keep your clock alive.' : (mode === 'cascade' ? 'Type falling blocks to shatter data cores and trigger row chain reactions.' : 'Type descending alien words to lock turret lasers and blast threats.')}
+                            ${mode === 'velocity' ? 'Type approaching lane words to turbo-drift, smash barriers, and keep your clock alive.' : (mode === 'cascade' ? 'Type falling blocks to shatter data cores and trigger row chain reactions.' : 'Type descending alien words to lock turret lasers and blast threats.')}
                         </p>
 
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 20px;text-align:left">
@@ -238,13 +264,19 @@ function launchArcadeMode(mode) {
                             </div>
                             <div>
                                 <label style="font-size:11.5px;font-weight:800;color:var(--text-muted);display:block;margin-bottom:6px;letter-spacing:0.04em">
-                                    ⚡ STARTING STAGE
+                                    ⚡ STARTING STAGE (1–10)
                                 </label>
                                 <select id="arcadeWaveSelect" style="background:var(--surface-2);color:var(--text-main);border:1px solid var(--border-light);padding:9px 12px;border-radius:var(--radius-sm);width:100%;font-family:inherit;font-size:13px;outline:none;cursor:pointer">
-                                    <option value="1" selected>Stage 1 (Calibration)</option>
-                                    <option value="3">Stage 3 (Tactical Speed)</option>
-                                    <option value="5">Stage 5 (Hyper-Drive)</option>
-                                    <option value="8">Stage 8 (Overdrive)</option>
+                                    <option value="1" ${initialLevel === 1 ? 'selected' : ''}>Stage 1 — Calibration</option>
+                                    <option value="2" ${initialLevel === 2 ? 'selected' : ''}>Stage 2 — Rhythm Flow</option>
+                                    <option value="3" ${initialLevel === 3 ? 'selected' : ''}>Stage 3 — Tactical Speed</option>
+                                    <option value="4" ${initialLevel === 4 ? 'selected' : ''}>Stage 4 — Acceleration</option>
+                                    <option value="5" ${initialLevel === 5 ? 'selected' : ''}>Stage 5 — Hyper-Drive Storm</option>
+                                    <option value="6" ${initialLevel === 6 ? 'selected' : ''}>Stage 6 — Shift Matrix</option>
+                                    <option value="7" ${initialLevel === 7 ? 'selected' : ''}>Stage 7 — Overdrive Velocity</option>
+                                    <option value="8" ${initialLevel === 8 ? 'selected' : ''}>Stage 8 — Cyberpunk</option>
+                                    <option value="9" ${initialLevel === 9 ? 'selected' : ''}>Stage 9 — Flagship Armada</option>
+                                    <option value="10" ${initialLevel === 10 ? 'selected' : ''}>Stage 10 — Nightmare Matrix</option>
                                 </select>
                             </div>
                         </div>
@@ -260,13 +292,14 @@ function launchArcadeMode(mode) {
                     </div>
                 </div>
 
+                <!-- Game Over Modal with direct Stage & Difficulty Re-selection -->
                 <div class="arcade-overlay-start" id="arcadeGameOverOverlay" style="display:none">
-                    <div class="arcade-modal-card">
+                    <div class="arcade-modal-card" style="max-width:540px;padding:32px 28px">
                         <div style="font-size:40px;margin-bottom:6px" id="gameOverIcon">💥</div>
                         <h2 style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:900" id="gameOverTitle">
                             SIMULATION CONCLUDED
                         </h2>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0;background:var(--surface-2);padding:14px;border-radius:var(--radius-md)">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;background:var(--surface-2);padding:14px;border-radius:var(--radius-md)">
                             <div>
                                 <div style="font-size:11px;color:var(--text-muted);font-weight:800">FINAL SCORE</div>
                                 <div style="font-size:22px;font-weight:900;color:var(--brand-light)" id="finalScoreVal">0</div>
@@ -284,9 +317,41 @@ function launchArcadeMode(mode) {
                                 <div style="font-size:20px;font-weight:800" id="finalAccVal">100%</div>
                             </div>
                         </div>
+
+                        <!-- Stage Selector on Game Over -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;text-align:left">
+                            <div>
+                                <label style="font-size:11px;font-weight:800;color:var(--text-muted);display:block;margin-bottom:4px">
+                                    DIFFICULTY
+                                </label>
+                                <select id="gameOverDifficultySelect" style="background:var(--surface-1);color:var(--text-main);border:1px solid var(--border-light);padding:8px 10px;border-radius:var(--radius-sm);width:100%;font-size:12.5px;outline:none">
+                                    <option value="cadet">🟢 Cadet</option>
+                                    <option value="tactical" selected>🔵 Tactical</option>
+                                    <option value="commander">🟣 Commander</option>
+                                    <option value="procedural">♾️ Neural Matrix</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;font-weight:800;color:var(--text-muted);display:block;margin-bottom:4px">
+                                    NEXT STAGE
+                                </label>
+                                <select id="gameOverWaveSelect" style="background:var(--surface-1);color:var(--text-main);border:1px solid var(--border-light);padding:8px 10px;border-radius:var(--radius-sm);width:100%;font-size:12.5px;outline:none">
+                                    <option value="1">Stage 1</option>
+                                    <option value="2">Stage 2</option>
+                                    <option value="3">Stage 3</option>
+                                    <option value="4">Stage 4</option>
+                                    <option value="5" selected>Stage 5</option>
+                                    <option value="6">Stage 6</option>
+                                    <option value="7">Stage 7</option>
+                                    <option value="8">Stage 8</option>
+                                    <option value="10">Stage 10</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div style="display:flex;gap:10px;justify-content:center">
                             <button class="btn btn-secondary" onclick="renderArcade()">Arcade Hub</button>
-                            <button class="btn btn-primary" onclick="startCurrentArcadeGame()">↺ Play Again</button>
+                            <button class="btn btn-primary" onclick="restartFromGameOver()">↺ Play Again</button>
                         </div>
                     </div>
                 </div>
@@ -331,6 +396,46 @@ function startCurrentArcadeGame() {
     }
 
     activeArcadeGame.start();
+}
+
+function restartFromGameOver() {
+    const diffEl = document.getElementById('gameOverDifficultySelect');
+    const waveEl = document.getElementById('gameOverWaveSelect');
+    const difficultyTier = diffEl ? diffEl.value : 'tactical';
+    const startWave = waveEl ? parseInt(waveEl.value, 10) : 1;
+
+    document.getElementById('arcadeGameOverOverlay').style.display = 'none';
+
+    if (activeArcadeGame) activeArcadeGame.destroy();
+
+    if (currentArcadeMode === 'velocity') {
+        activeArcadeGame = new VelocityRacerEngine(difficultyTier, startWave);
+    } else if (currentArcadeMode === 'cascade') {
+        activeArcadeGame = new CascadeReactorEngine(difficultyTier, startWave);
+    } else {
+        activeArcadeGame = new OrbitalDefenseEngine(difficultyTier, startWave);
+    }
+
+    activeArcadeGame.start();
+}
+
+function adjustActiveGameStage(delta) {
+    if (!activeArcadeGame) return;
+    if (activeArcadeGame.wave !== undefined) {
+        activeArcadeGame.wave = Math.max(1, Math.min(15, activeArcadeGame.wave + delta));
+        activeArcadeGame.waveTotalShips = 14 + (activeArcadeGame.wave - 1) * 4;
+        activeArcadeGame.spawnInterval = Math.max(700, 2000 - activeArcadeGame.wave * 100);
+        activeArcadeGame.updateHUD();
+        toast(`★ Stage Adjusted to WAVE ${activeArcadeGame.wave}`);
+    } else if (activeArcadeGame.sector !== undefined) {
+        activeArcadeGame.sector = Math.max(1, Math.min(15, activeArcadeGame.sector + delta));
+        activeArcadeGame.updateHUD();
+        toast(`★ Stage Adjusted to SECTOR ${activeArcadeGame.sector}`);
+    } else if (activeArcadeGame.level !== undefined) {
+        activeArcadeGame.level = Math.max(1, Math.min(15, activeArcadeGame.level + delta));
+        activeArcadeGame.updateHUD();
+        toast(`★ Stage Adjusted to LEVEL ${activeArcadeGame.level}`);
+    }
 }
 
 // ==========================================================================
