@@ -25,8 +25,15 @@ function logo() {
     return `
         <div class="brand-mark">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 7C4 5.34315 5.34315 4 7 4H17C18.6569 4 20 5.34315 20 7V17C20 18.6569 18.6569 20 17 20H7C5.34315 20 4 18.6569 4 17V7Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-                <path d="M8 12H16M12 8V16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#brandGradMark)" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+                <path d="M12 7V17M7 12H17" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="brandGradMark" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1"/>
+                        <stop offset="50%" stop-color="#a855f7"/>
+                        <stop offset="100%" stop-color="#ec4899"/>
+                    </linearGradient>
+                </defs>
             </svg>
         </div>
         <div>
