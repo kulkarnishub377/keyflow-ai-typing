@@ -367,6 +367,48 @@ class AdvancedTypingEngine:
                         now,
                     ),
                 )
+        self.update_skill_mastery(user_id, analysis)
+
+    def update_skill_mastery(self, user_id: int, analysis: dict[str, Any]) -> None:
+        now = datetime.now().isoformat(timespec="seconds")
+        with self.db.connect() as con:
+            for item in analysis.get("key_insights", []):
+                if item["attempts"] < 5:
+                    continue
+                k = item["key"].lower()
+                acc = item["accuracy"]
+                mastery_signal = max(0.0, min(1.0, (acc - 90.0) / 6.0))
+                
+                con.execute(
+                    """
+                    INSERT INTO skill_mastery(user_id,skill_id,mastery,confidence,attempts,last_signal,updated_at)
+                    VALUES(?,?,?,?,?,?,?)
+                    ON CONFLICT(user_id,skill_id) DO UPDATE SET
+                      mastery = (excluded.mastery * 0.3) + (skill_mastery.mastery * 0.7),
+                      confidence = MIN(1.0, skill_mastery.confidence + 0.1),
+                      attempts = skill_mastery.attempts + excluded.attempts,
+                      last_signal = 'accuracy',
+                      updated_at = excluded.updated_at
+                    """,
+                    (user_id, f"key_{k}", mastery_signal, 0.2, item["attempts"], "accuracy", now)
+                )
+            
+            rhythm_cv = analysis.get("rhythm_cv", 1.0)
+            if rhythm_cv > 0:
+                mastery_signal = max(0.0, min(1.0, (0.7 - rhythm_cv) / 0.3))
+                con.execute(
+                    """
+                    INSERT INTO skill_mastery(user_id,skill_id,mastery,confidence,attempts,last_signal,updated_at)
+                    VALUES(?,?,?,?,?,?,?)
+                    ON CONFLICT(user_id,skill_id) DO UPDATE SET
+                      mastery = (excluded.mastery * 0.3) + (skill_mastery.mastery * 0.7),
+                      confidence = MIN(1.0, skill_mastery.confidence + 0.1),
+                      attempts = skill_mastery.attempts + 1,
+                      last_signal = 'rhythm_cv',
+                      updated_at = excluded.updated_at
+                    """,
+                    (user_id, "rhythm", mastery_signal, 0.2, 1, "rhythm_cv", now)
+                )
 
     def adaptive_plan(self, user_id: int) -> dict[str, Any]:
         analysis = self.analyze(user_id)
@@ -423,6 +465,12 @@ class AdvancedTypingEngine:
         dashboard = self.db.dashboard(user_id)
         telemetry = self._latest_telemetry(user_id)
         dashboard["latest_telemetry"] = telemetry
+        dashboard["advanced_analysis"] = self.analyze(user_id)
+        
+        with self.db.connect() as con:
+            mastered = con.execute("SELECT skill_id FROM skill_mastery WHERE user_id=? AND mastery > 0.95 AND confidence > 0.5", (user_id,)).fetchall()
+            dashboard["mastered_skills"] = [r["skill_id"] for r in mastered]
+            
         result = orchestrator.run(dashboard)
         duration_ms = round((time.perf_counter() - started) * 1000, 2)
         trace = result.get("trace", [])

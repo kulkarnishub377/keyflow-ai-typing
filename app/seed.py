@@ -298,6 +298,34 @@ LESSONS = [
         8,
         32,
     ),
+    # Level 8: Endurance Paragraphs
+    (
+        "Endurance: The Stoic Mind",
+        8,
+        "Maintain focus over a longer paragraph about stoic philosophy.",
+        "The obstacle in the path becomes the path. Never forget, within every adversity is an opportunity. Upon waking let your first thought be, 'Thank you.'\n\nIt is not death that a man should fear, but he should fear never beginning to live. The soul becomes dyed with the color of its thoughts.",
+        "paragraphs",
+        10,
+        33,
+    ),
+    (
+        "Endurance: Nature's Rhythm",
+        8,
+        "A multi-paragraph exercise focusing on smooth, flowing transitions.",
+        "The river carves through the mountain not by force, but by persistence. Over centuries, the steady flow of water grinds stone into fine sand, creating a path where none existed.\n\nIn typing, as in nature, rhythm is more powerful than raw speed. A steady, unbroken cadence will always outpace a frantic, erratic rush. Breathe, and let the river flow.",
+        "paragraphs",
+        10,
+        34,
+    ),
+    (
+        "Endurance: Technological Evolution",
+        8,
+        "A longer text mixing complex words, punctuation, and structure.",
+        "Humanity has always been defined by its tools. From the first stone axes to the modern microprocessor, our ability to shape our environment has grown exponentially.\n\nThe keyboard is the primary interface between the human mind and the digital realm. To master it is to reduce the friction between thought and creation, allowing ideas to flow unhindered onto the screen.",
+        "paragraphs",
+        12,
+        35,
+    ),
 ]
 
 
