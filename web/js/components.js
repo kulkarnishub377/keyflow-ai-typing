@@ -108,11 +108,12 @@ function layout(content, title, subtitle) {
                     <div class="nav-section-title">Core Workspace</div>
                     ${navItem('dashboard', '⌂', 'Dashboard', '1')}
                     ${navItem('practice', '⌨', 'Practice Studio', '2')}
-                    ${navItem('learn', '◎', 'Curriculum Path', '3')}
-                    ${navItem('progress', '◫', 'Analytics & Heatmap', '4')}
+                    ${navItem('arcade', '⚡', 'Arcade Matrix', '3')}
+                    ${navItem('learn', '◎', 'Curriculum Path', '4')}
+                    ${navItem('progress', '◫', 'Analytics & Heatmap', '5')}
                     <div class="nav-section-title" style="margin-top:12px">Intelligence & Setup</div>
-                    ${navItem('coach', '✦', 'AI Copilot Lab', '5')}
-                    ${navItem('settings', '⚙', 'Settings & Vault', '6')}
+                    ${navItem('coach', '✦', 'AI Copilot Lab', '6')}
+                    ${navItem('settings', '⚙', 'Settings & Vault', '7')}
                 </nav>
                 <div class="sidebar-footer">
                     <div class="local-shield">
@@ -158,6 +159,7 @@ function layout(content, title, subtitle) {
 // ==========================================================================
 const COMMANDS = [
     { id: 'practice', label: 'Start Free Practice Studio', category: 'Navigation', icon: '⌨', action: () => go('practice') },
+    { id: 'arcade', label: 'Launch Cyber Matrix Orbital Defense Game', category: 'Combat', icon: '⚡', action: () => go('arcade') },
     { id: 'adaptive', label: 'Launch Targeted AI Micro-Drill', category: 'Training', icon: '✦', action: () => startAdaptiveDrill() },
     { id: 'dashboard', label: 'Go to Dashboard', category: 'Navigation', icon: '⌂', action: () => go('dashboard') },
     { id: 'learn', label: 'Open Curriculum & Lessons', category: 'Navigation', icon: '◎', action: () => go('learn') },
