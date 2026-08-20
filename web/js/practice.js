@@ -108,6 +108,26 @@ function renderPractice() {
                 </div>
             </div>
 
+            <div class="ghost-racing-track" id="ghostRacingTrack">
+                <div class="race-header">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-primary)">
+                            🏎️ Velocity Ghost Racing Simulation
+                        </span>
+                        <span id="raceDeltaBadge" class="race-delta-badge delta-ahead">Ready</span>
+                    </div>
+                    <span style="font-size:11.5px;color:var(--text-muted);font-weight:600">
+                        Target Ghost Pace: <strong style="color:var(--accent-cyan)">${targetWpm || 45} WPM</strong>
+                    </span>
+                </div>
+                <div class="race-lane">
+                    <div class="race-lane-grid"></div>
+                    <div class="race-runner player" id="racePlayerCar" style="left: 2%" title="Your Live Progress">🏎️</div>
+                    <div class="race-runner ghost" id="raceGhostCar" style="left: 2%" title="AI Target Ghost">👻</div>
+                    <span class="race-finish-flag">🏁</span>
+                </div>
+            </div>
+
             ${passageTabsHtml}
 
             <div class="typing-canvas-wrapper" id="canvasWrapper" onclick="focusTypingInput()">
@@ -396,7 +416,15 @@ function setupTyping() {
         const wpm = (correct / 5) / (elapsed / 60);
         const acc = typed.length ? (correct / typed.length) * 100 : 100;
 
-        if (wpmEl) wpmEl.innerHTML = `${isFinite(wpm) ? Math.round(wpm) : 0} <small style="font-size:12px;font-weight:600;color:var(--text-muted)">WPM</small>`;
+        if (wpmEl) {
+            const isNitro = wpm >= 65 && acc >= 95;
+            wpmEl.innerHTML = `${isFinite(wpm) ? Math.round(wpm) : 0} <small style="font-size:12px;font-weight:600;color:var(--text-muted)">WPM</small> ${isNitro ? '<span style="font-size:12px;color:var(--accent-cyan);font-weight:800;letter-spacing:0.04em">🔥 NITRO</span>' : ''}`;
+            if (isNitro) {
+                wpmEl.style.textShadow = '0 0 16px rgba(0, 242, 254, 0.8), 0 0 28px rgba(236, 72, 153, 0.5)';
+            } else {
+                wpmEl.style.textShadow = 'none';
+            }
+        }
         if (accEl) {
             accEl.textContent = acc.toFixed(1) + '%';
             accEl.className = 'live-hud-value ' + (acc >= 97 ? 'acc-green' : acc >= 90 ? 'acc-yellow' : 'acc-red');
@@ -406,6 +434,35 @@ function setupTyping() {
             errEl.style.color = errors > 0 ? 'var(--accent-rose)' : 'var(--text-muted)';
         }
         if (timeEl) timeEl.textContent = elapsed.toFixed(1) + 's';
+
+        // Update Ghost Racing Track Simulation
+        const playerCar = document.getElementById('racePlayerCar');
+        const ghostCar = document.getElementById('raceGhostCar');
+        const deltaBadge = document.getElementById('raceDeltaBadge');
+        const totalPromptChars = text.length || 100;
+        const targetGhostWpm = targetWpm || 45;
+
+        if (playerCar) {
+            const playerPct = Math.min(97, Math.max(2, (typed.length / totalPromptChars) * 95 + 2));
+            playerCar.style.left = playerPct + '%';
+
+            if (state.practice.started) {
+                const ghostCharsTyped = elapsed * (targetGhostWpm / 60) * 5;
+                const ghostPct = Math.min(97, Math.max(2, (ghostCharsTyped / totalPromptChars) * 95 + 2));
+                if (ghostCar) ghostCar.style.left = ghostPct + '%';
+
+                if (deltaBadge) {
+                    const diffWords = Math.round((typed.length - ghostCharsTyped) / 5);
+                    if (diffWords >= 0) {
+                        deltaBadge.className = 'race-delta-badge delta-ahead';
+                        deltaBadge.textContent = `⚡ Leading +${diffWords}w`;
+                    } else {
+                        deltaBadge.className = 'race-delta-badge delta-behind';
+                        deltaBadge.textContent = `⚠️ Ghost +${Math.abs(diffWords)}w`;
+                    }
+                }
+            }
+        }
 
         if (typed.length >= text.length) {
             if (paceInterval) clearInterval(paceInterval);

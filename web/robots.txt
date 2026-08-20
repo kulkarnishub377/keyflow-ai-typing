@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kulkarnishub377.github.io/keyflow-ai-typing/sitemap.xml

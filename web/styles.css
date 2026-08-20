@@ -948,6 +948,95 @@ a {
   z-index: 10;
 }
 
+/* Ghost Racing Simulation Track */
+.ghost-racing-track {
+  background: var(--surface-1);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.race-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.race-lane {
+  position: relative;
+  height: 26px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+}
+
+.race-lane-grid {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(255, 255, 255, 0.04) 38px, rgba(255, 255, 255, 0.04) 40px);
+}
+
+.race-runner {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  transition: left 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 5;
+}
+
+.race-runner.player {
+  filter: drop-shadow(0 0 8px #00f2fe);
+}
+
+.race-runner.ghost {
+  filter: drop-shadow(0 0 8px #c084fc);
+  opacity: 0.85;
+}
+
+.race-finish-flag {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.race-delta-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.delta-ahead {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.delta-behind {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--accent-rose);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
 /* Mechanical Visual Keyboard Guide */
 .keyboard-section {
   background: var(--surface-1);

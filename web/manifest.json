@@ -1,0 +1,25 @@
+{
+  "name": "KeyFlow AI Typing Studio",
+  "short_name": "KeyFlow",
+  "description": "Local-first adaptive touch typing trainer and cyber velocity arcade studio.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070913",
+  "theme_color": "#070913",
+  "categories": ["education", "games", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "assets/keyflow_mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ]
+}
