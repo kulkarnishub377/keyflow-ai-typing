@@ -142,8 +142,10 @@ class API:
     def choose_backup_path(self) -> dict[str, Any]:
         if not webview.windows:
             return {"path": None}
+        dialog_type = getattr(webview, "FileDialog", None)
+        save_mode = getattr(dialog_type, "SAVE", getattr(webview, "SAVE_DIALOG", 0))
         result = webview.windows[0].create_file_dialog(
-            webview.SAVE_DIALOG,
+            save_mode,
             directory=str(Path.home()),
             save_filename="keyflow-backup.json",
             file_types=("JSON files (*.json)", "All files (*.*)"),
