@@ -102,13 +102,12 @@ function pollBoot() {
     if (window._booted) return;
     if (window.pywebview?.api) {
         boot();
-    } else if (bootAttempts < 30) {
+    } else if (bootAttempts < 6) {
         bootAttempts++;
-        setTimeout(pollBoot, 60);
+        setTimeout(pollBoot, 50);
     } else {
-        // Fallback to auth screen if bridge is delayed
-        applyTheme();
-        if (!state.user) renderAuth();
+        // Instant boot in Web Demo mode (for GitHub Pages / Web browsers)
+        boot();
     }
 }
 
