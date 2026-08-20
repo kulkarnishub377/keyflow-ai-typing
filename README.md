@@ -129,6 +129,11 @@ KeyFlow utilizes a custom **Obsidian Glass** design system engineered exclusivel
 - Windows 10/11, macOS, or Linux
 - [Ollama](https://ollama.com/) *(Optional: Only required if using local Generative LLM coaching)*
 
+### Quick 1-Click Launch (Windows)
+Simply double-click [`KeyFlow.bat`](KeyFlow.bat) in the project root to immediately launch the application.
+
+---
+
 ### Run from Source
 
 1. **Clone the repository**
@@ -140,8 +145,8 @@ KeyFlow utilizes a custom **Obsidian Glass** design system engineered exclusivel
 2. **Create and activate virtual environment**
    ```bash
    python -m venv .venv
-   # Windows (PowerShell):
-   .venv\Scripts\Activate.ps1
+   # Windows (CMD):
+   .venv\Scripts\activate
    # macOS/Linux:
    source .venv/bin/activate
    ```
@@ -158,16 +163,36 @@ KeyFlow utilizes a custom **Obsidian Glass** design system engineered exclusivel
 
 ---
 
-## 📦 Building Standalone Desktop App
+## 📦 Building Standalone Desktop Executable (`.exe`)
 
-To compile KeyFlow into a standalone Windows `.exe` executable with embedded custom icons:
+KeyFlow includes a master build engine ([`build_app.py`](build_app.py)) that handles dependency installation, transparent icon rendering, PyInstaller binary compilation, and Windows desktop shortcut placement in a single automated step.
+
+### 🚀 Automated 1-Command Build (Recommended)
+
+Run the master build script from your terminal:
+
+```bash
+python build_app.py
+```
+
+*(Or simply double-click [`setup_desktop.bat`](setup_desktop.bat) in Windows File Explorer)*.
+
+**What the master build script handles automatically:**
+1. **Dependencies**: Automatically verifies and installs `pillow`, `pyinstaller`, and `requirements.txt`.
+2. **Icons**: Generates multi-resolution transparent Windows [`web/favicon.ico`](web/favicon.ico) (16px, 24px, 32px, 48px, 64px, 128px, and 256px) and high-res PNGs.
+3. **Compilation**: Invokes PyInstaller with [`build.spec`](build.spec) and outputs `dist/KeyFlow.exe`.
+4. **Desktop Integration**: Automatically creates a **"KeyFlow AI Typing"** shortcut directly on your Windows Desktop with the custom app icon.
+
+---
+
+### 🔨 Manual PyInstaller Build
+
+If you already have icons generated and want to compile directly:
 
 ```bash
 pip install pyinstaller
-pyinstaller build.spec --clean -y
+pyinstaller build.spec --noconfirm
 ```
-
-The compiled binary will be located inside the `dist/` directory as `KeyFlow.exe`.
 
 ---
 
