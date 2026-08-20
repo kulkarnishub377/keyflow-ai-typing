@@ -1,6 +1,10 @@
 <div align="center">
-  <img src="keyflow_logo.png" alt="KeyFlow Logo" width="120" height="120" />
-  <h1>KeyFlow AI Typing</h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="web/assets/keyflow_logo_dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="web/assets/keyflow_logo_light.svg">
+    <img alt="KeyFlow AI Typing Studio" src="web/assets/keyflow_logo_light.svg" width="340" />
+  </picture>
+  <br/><br/>
   <p><strong>Advanced, Offline-First, Local AI Typing Engine & Arcade Cyber Combat Studio</strong></p>
 
   <!-- Badges -->

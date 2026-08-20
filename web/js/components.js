@@ -21,24 +21,54 @@ function initials(name) {
     return (name || 'KF').split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
 }
 
-function logo() {
+function logo(size = 'md') {
+    const isLarge = size === 'lg';
+    const markSize = isLarge ? 48 : 40;
+    const svgSize = isLarge ? 30 : 24;
+    const titleSize = isLarge ? 'font-size:26px' : 'font-size:20px';
+    const tagSize = isLarge ? 'font-size:11px' : 'font-size:10px';
+
     return `
-        <div class="brand-mark">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="2" width="20" height="20" rx="6" fill="url(#brandGradMark)" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
-                <path d="M12 7V17M7 12H17" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <div class="brand-mark" style="width:${markSize}px;height:${markSize}px">
+            <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                    <linearGradient id="brandGradMark" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <linearGradient id="kfMarkFoldNav" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stop-color="#6366f1"/>
                         <stop offset="50%" stop-color="#a855f7"/>
                         <stop offset="100%" stop-color="#ec4899"/>
                     </linearGradient>
+                    <linearGradient id="kfMarkStemNav" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00f2fe"/>
+                        <stop offset="50%" stop-color="#4facfe"/>
+                        <stop offset="100%" stop-color="#a855f7"/>
+                    </linearGradient>
+                    <linearGradient id="kfMarkArmNav" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8"/>
+                        <stop offset="100%" stop-color="#c084fc"/>
+                    </linearGradient>
+                    <linearGradient id="kfMarkLegNav" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f472b6"/>
+                        <stop offset="100%" stop-color="#818cf8"/>
+                    </linearGradient>
                 </defs>
+                <!-- Speed Trails -->
+                <rect x="6" y="21" width="8" height="3.5" rx="1.75" fill="#00f2fe"/>
+                <rect x="3" y="28" width="12" height="3.5" rx="1.75" fill="#00f2fe"/>
+                <rect x="5" y="35" width="9" height="3.5" rx="1.75" fill="#6366f1"/>
+                <rect x="8" y="42" width="6" height="3.5" rx="1.75" fill="#ec4899"/>
+                <!-- 'K' Ribbon Graphic -->
+                <g transform="translate(4, 1)">
+                    <path d="M28 32 L44 48 C45.5 49.5 48 49.5 49.5 48 C51 46.5 51 44 49.5 42.5 L36 29 Z" fill="url(#kfMarkLegNav)"/>
+                    <path d="M26 30 L43 14 C44.5 12.5 47 12.5 48.5 14 C50 15.5 50 18 48.5 19.5 L34 34 Z" fill="url(#kfMarkArmNav)"/>
+                    <path d="M21 13 C21 11.5 22.5 10.5 24 11 C26.5 12 28 15 28 19 L28 41 C28 45 26 48 23 49 C21 49.5 19.5 48 19.5 46 L19.5 17 C19.5 14.5 20 13 21 13 Z" fill="url(#kfMarkStemNav)"/>
+                    <path d="M20 25 C23 25 27 26 31 29 C34 31.5 33 36 29 38 C25 39.5 21 38 20 35 Z" fill="url(#kfMarkFoldNav)"/>
+                </g>
+                <circle cx="34" cy="33" r="2.5" fill="#ffffff"/>
             </svg>
         </div>
         <div>
-            <div class="brand-title">Key<span>Flow</span></div>
-            <div class="brand-tag"><span class="brand-tag-dot"></span> Local Engine</div>
+            <div class="brand-title" style="${titleSize}">Key<span>Flow</span></div>
+            <div class="brand-tag" style="${tagSize}"><span class="brand-tag-dot"></span> Local Engine</div>
         </div>
     `;
 }

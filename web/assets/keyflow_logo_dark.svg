@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 76" width="340" height="76" fill="none">
+  <defs>
+    <!-- Brand Mark Gradients -->
+    <linearGradient id="darkMarkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+
+    <linearGradient id="darkMarkBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="45%" stop-color="#6366f1"/>
+      <stop offset="80%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+
+    <linearGradient id="darkTextFlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+
+    <!-- 'K' Ribbon Gradients -->
+    <linearGradient id="darkStem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="40%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <linearGradient id="darkArm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+
+    <linearGradient id="darkLeg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <linearGradient id="darkFold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="60%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <filter id="darkGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="darkShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Keycap Badge -->
+  <g transform="translate(8, 8)" filter="url(#darkShadow)">
+    <rect width="60" height="60" rx="16" fill="url(#darkMarkBg)" stroke="url(#darkMarkBorder)" stroke-width="1.8" filter="url(#darkGlow)"/>
+    <rect x="2.5" y="2.5" width="55" height="55" rx="13.5" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+
+    <!-- Speed Flow Trails -->
+    <rect x="8" y="20" width="8" height="3.2" rx="1.6" fill="#00f2fe"/>
+    <rect x="5" y="27" width="12" height="3.2" rx="1.6" fill="#00f2fe"/>
+    <rect x="7" y="34" width="9" height="3.2" rx="1.6" fill="#6366f1"/>
+    <rect x="10" y="41" width="6" height="3.2" rx="1.6" fill="#ec4899"/>
+
+    <!-- 'K' Ribbon Graphic -->
+    <g transform="translate(2, 0)">
+      <path d="M28 32 L44 48 C45.5 49.5 48 49.5 49.5 48 C51 46.5 51 44 49.5 42.5 L36 29 Z" fill="url(#darkLeg)"/>
+      <path d="M26 30 L43 14 C44.5 12.5 47 12.5 48.5 14 C50 15.5 50 18 48.5 19.5 L34 34 Z" fill="url(#darkArm)"/>
+      <path d="M21 13 C21 11.5 22.5 10.5 24 11 C26.5 12 28 15 28 19 L28 41 C28 45 26 48 23 49 C21 49.5 19.5 48 19.5 46 L19.5 17 C19.5 14.5 20 13 21 13 Z" fill="url(#darkStem)"/>
+      <path d="M20 25 C23 25 27 26 31 29 C34 31.5 33 36 29 38 C25 39.5 21 38 20 35 Z" fill="url(#darkFold)"/>
+    </g>
+
+    <circle cx="34" cy="33" r="2.5" fill="#ffffff"/>
+  </g>
+
+  <!-- Typography (Right Side) -->
+  <g transform="translate(82, 0)">
+    <text x="0" y="34" font-family="'Outfit', 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" font-weight="900" font-size="29" letter-spacing="-0.03em" fill="#ffffff">
+      Key<tspan fill="url(#darkTextFlow)">Flow</tspan>
+    </text>
+
+    <!-- Subtitle Pill Capsule -->
+    <g transform="translate(0, 44)">
+      <rect fill="rgba(99, 102, 241, 0.12)" stroke="rgba(99, 102, 241, 0.28)" stroke-width="1" x="0" y="0" width="156" height="20" rx="10"/>
+      <circle cx="10" cy="10" r="2.5" fill="#10b981"/>
+      <circle cx="10" cy="10" r="4.5" fill="none" stroke="#10b981" stroke-width="1" opacity="0.4"/>
+      <text fill="#94a3b8" x="20" y="13.5" font-family="'Inter', 'Plus Jakarta Sans', system-ui, sans-serif" font-weight="700" font-size="9" letter-spacing="0.1em" text-transform="uppercase">
+        ADAPTIVE TYPING STUDIO
+      </text>
+    </g>
+  </g>
+</svg>
